@@ -1,12 +1,2373 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8">
-<title>Hello World</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:type" content="website">
+<meta property="og:title" content="EnvHarness: Awakening Static Worlds for Agent Learning">
+<meta property="og:description" content="A programmable layer that turns a static environment into a controllable one, plus an LLM designer that customizes it against the policy being trained.">
+<meta property="og:image" content="og.png"><!-- after deploy, replace with the absolute URL -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EnvHarness: Awakening Static Worlds for Agent Learning">
+<meta name="twitter:image" content="og.png">
+<meta name="description" content="EnvHarness wraps a frozen environment in stackable plug-in layers (Stage, Contract, Chain), the same trick an agent harness plays on a frozen LLM, applied to the other side of the loop.">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAHNUlEQVR4nOzdbWxTVRzH8XPX23Zrt7Xd2NZ2GwwGjD2AkwEmmG2CBKNIJDEQIMSEZAkaIkJ4qYkxaExMIASiognRF8AL3hAUfHqlElRAkAQcKENgDDfYQ8eeSteu9egM8WH/rFsL/9Oe3yfLwgu2pbff3nt6Tu+95vztLQJgLKYAICAOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEOICEO4c8zy702j9PiybbEYiIwMNLVH7nUFuodjAq96RuH3TReWOJeXps9o8g25n+42Bo6frb/8Mm7QleGnrfUqJ2e+cbaopL88V8bzTdDrx26faMzLPSTIfSzYGbWvk3+eMqQqkrt+zcXlxVahX60i0MOL/Y0+aymEf+PyLHIvheLszO121baPeAd6wrtEyljVEGuZevKfKEZveJ4cp6zotguJmXVohyvW6/xu15xrF7sEpNlGEYiP56KNIpjSo5l4cwskYAVddlCJxrF0VjjFIkpcJmzfDahDY3iWJDYbmNUXXkSfkmq0GiEVVOaKRImpz2ENnSJIzcrQ66hiITN9msUhy6HlVlJelLLi6zGhGdJUpUuccz2J2cgmZFhUAt16UeXOKqSMeD4+1eV6HJk0SWOuVOT9oxWTdUlDi0GpHLlrHRK0pZV62bo8m5Wiz1HQ5VDJI9c183PsQgNaBHHyoW5IqmeXZAjNJD+cVSX2h+dnrTR6Kg1eqzApX8cr64uFMnm9Zibn84T6S6d47BkiL1Nvgr/A5mW2LjUveqxND+4WHyLt4j0YjONskLbkhrn2xu81Q/sbadhGI3VznnTMvuC0WhMyO8i7aTGp8+nFVjlcqh8m+B1m748q/zucqTSPq9nYKQjEOnojbR1h1vah09dGerqGxHKU3qeo77S8UxdzvzyrCkp/tYxL9siv/65otseiJy9Gjxyqu/8tXtCVYruOR4py9yyIq92evpPN51oHtp9rOv6HRXPi1EuDjmb+fqawvqkTlup7+jp/neOdN4Lx4RK1Dpyy1HFga0lupUhPbco5+OXiwty1Tp6KhTH43MccgPp9vH/+2b57Qe3lcwpVujzAKrEsWyec0+Tz2HX8fTM+/JzzIPbSpM+nztpSjwZs/22HeuLBPxl50ZvkUuJ4wt/HG5nhtxn2ExtPnw3HpfDIjeIXYENwhyH1SLkhijIxTVk/mWmz/7WBv5dKXMc6+rd1aWqHGKVIqf/l9cyn2DHGcfotXUEEJqWeQQrzjieX5zrcWrxkarJkbM+S+cmegpnIjjj2NCI3cY41jdwbiK2OCr8tiIXxqHjqC2zu/nWn9n+cGM15w4zVRiGUV/FtqHY4mhAHPFh3FA8O3ZLhlBqEUFljOf188RR6DINfc5HTgzjVDrPYcXrwVA0XvJVxLWUzxSHruvyk1PEtLl44sjLRhwTUMD0np9tQArxs1p4xmd4BQMJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQAJcQCJJ45QRK27zihumGlz8cTR058Ct79TR1dfRHDgiYPr0aYorltJ8sTRmQo3zlRELBbrZHot8Vxi5/eecH8QfcTl6u3wCNMNjXniiMbED78GBcThu8tDggnbxbkYH3NqOXmJbUOxzXN82zwoYDzB4ei539h2sWx7jt7B6IUb6t6pWxEnmoeifFNCnNd8/OCrHgG0aDT2/hecm4gzju9/Cf50DcNS0vFzA61dnPe4Z75a7M6j3QLGEh6JvfsZ88ZhjuNSW+jAN70C/mfXJ93sU4X815nefaybcUCupk9/7D988q7gxh9HLCa2f9TRHuA8uCrl8q3Qm4fvCAUocYX6vmD0lf0dgQFMqIu27sjW/e0Rpvny/1Dl9gVXO4bX7ropXzRCY2euDK3f1arOqqRC97aQC9Mb9976+qKmM6eHTtx96cP2wZBCH4My5m9vEYqpr3RseiqvsoTtxncP2ekrwfc+777QqtxeU8U4RjVU/ZnInOJ0TuRMS3Dflz3nrym6jKBuHKMq/LYnarIba5zyHyItyLUSuagkj55y6fH6HaXfo6kex31et1lZave5TZ/H6vWYLgfbDTUnKiZiPQMjHYFIeyByqzv88817ctFRpIKUOTWhozcivwQ8RDhvBUiIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0iIA0h/AAAA///iq9u8AAAABklEQVQDAHW7haHErdVBAAAAAElFTkSuQmCC">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E  %3Cstyle%3Erect%7Bfill:#3273DC%7D%40media(prefers-color-scheme:dark)%7Brect%7Bfill:#3B82F6%7D%7D%3C/style%3E  %3Crect x=%223%22 y=%223%22 width=%2258%22 height=%2258%22 rx=%2215%22/%3E%3Cg transform=%22translate(11.5,13) scale(0.64)%22%3E%3Cpath d=%22M 4 30 A 12 12 0 0 1 16 18 H 21 C 28 18 22 5 32 5 C 42 5 36 18 43 18 H 48 A 12 12 0 0 1 60 30 V 47 A 12 12 0 0 1 48 59 H 16 A 12 12 0 0 1 4 47 Z%22 fill=%22#fff%22/%3E%3C/g%3E%3C/svg%3E">
+<title>EnvHarness: Awakening Static Worlds for Agent Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css?family=Google+Sans:400,500,700|Noto+Sans:400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS — glacial light (default) / instrument-panel noir
+   dual accent: agent (amber) ⟷ env (teal)
+   ============================================================ */
+:root, [data-theme="light"]{
+  --bg0:#FFFFFF; --bg1:#FAFAFB; --bg2:#F6F7F9;
+  --panel:#FFFFFF; --panel-2:#FFFFFF;
+  --line:#E9EAEE; --line-2:#D7DAE0;
+  --ink:#24292F; --ink-2:#4B5158; --ink-3:#8B919A;
+  --env:#3273DC; --env-deep:#2456B0;
+  --agent:#B5701F; --agent-deep:#8F5613;
+  --mid:#7A52C7; --red:#C94848; --salmon:#EE9180; --salmon-2:#DB7663;
+  --onenv:#FFFFFF;
+  --chip-a:#FFFFFF; --chip-b:#EAF0F8;
+  --cart-a:#FFFFFF; --cart-b:#E4F4F0;
+  --card24-a:#FFFFFF; --card24-b:#EBF0F8;
+  --fillA-bg:#D3D9E1; --fillA-ink:#59636F;
+  --hud-bg:rgba(246,248,251,.85);
+  --grid:rgba(70,95,140,.10);
+  --orb-op:.15;
+  --pulse-fill:var(--env);
+  --glow-k:70%;           /* glow strength scaler via color-mix */
+}
+[data-theme="dark"]{
+  --bg0:#0D1117; --bg1:#11161D; --bg2:#161B22;
+  --panel:#141A21; --panel-2:#161C24;
+  --line:#262C36; --line-2:#39414D;
+  --ink:#E6EDF3; --ink-2:#A8B3BF; --ink-3:#707A86;
+  --env:#79A8F5; --env-deep:#4E7FD0;
+  --agent:#EFA75B; --agent-deep:#C07E2F;
+  --mid:#9E86E8; --red:#F07070; --salmon:#F09E8C; --salmon-2:#D9836F;
+  --onenv:#04110E;
+  --chip-a:#141E38; --chip-b:#0B1226;
+  --cart-a:#12253A; --cart-b:#0B1A2C;
+  --card24-a:#131D38; --card24-b:#0C1326;
+  --fillA-bg:#4A5563; --fillA-ink:#C4CDD8;
+  --hud-bg:rgba(6,9,18,.82);
+  --grid:rgba(122,139,208,.055);
+  --orb-op:.16;
+  --pulse-fill:#FFFFFF;
+  --glow-k:100%;
+}
+:root{
+  --env-ghost:color-mix(in srgb,var(--env) 9%,transparent);
+  --agent-ghost:color-mix(in srgb,var(--agent) 11%,transparent);
+  --env-line:color-mix(in srgb,var(--env) 55%,transparent);
+  --agent-line:color-mix(in srgb,var(--agent) 55%,transparent);
+  --teal:var(--env); --amber:var(--agent);
+  --teal-ghost:var(--env-ghost); --amber-ghost:var(--agent-ghost);
+  --display:'Google Sans','Noto Sans',-apple-system,sans-serif;
+  --sans:'Noto Sans','Google Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'Roboto Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --serif:var(--display);
+  --measure:820px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{background:var(--bg0);color:var(--ink);font-family:var(--sans);font-size:16.5px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background-color .35s,color .35s}
+::selection{background:color-mix(in srgb,var(--env) 26%,transparent)}
+a{color:var(--env);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.86em;background:var(--bg2);padding:1.5px 6px;border-radius:5px;
+  border:1px solid var(--line);color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ============================================================
+   HUD NAV
+   ============================================================ */
+.hud{position:fixed;top:0;left:0;right:0;z-index:90;border-bottom:1px solid transparent;
+  transition:background .3s,border-color .3s}
+.hud.scrolled{background:var(--hud-bg);backdrop-filter:blur(12px);border-color:var(--line)}
+.hud-in{max-width:1240px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:26px}
+.wordmark{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.04em;color:var(--ink);
+  display:flex;align-items:center;gap:9px;text-decoration:none}
+.wordmark:hover{text-decoration:none}
+.wordmark .mark{width:21px;height:21px;flex:none}
+
+.hud nav{display:flex;gap:22px;margin-left:auto;align-items:center}
+.hud nav a{font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;color:var(--ink-2)}
+.hud nav a:hover{color:var(--env);text-decoration:none}
+.navbtn{border:1px solid var(--line-2);border-radius:7px;padding:7px 13px!important;color:var(--ink)!important}
+.navbtn:hover{border-color:var(--env)}
+.tbtn{cursor:pointer;background:none;border:1px solid var(--line-2);color:var(--ink-2);
+  padding:7px 12px;border-radius:7px;font-family:var(--mono);font-size:11.5px;transition:all .2s}
+.tbtn:hover{border-color:var(--env);color:var(--env)}
+@media(max-width:860px){.hud nav a.hide-s{display:none}}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{position:relative;display:block;padding:96px 24px 30px;overflow:hidden}
+
+.hero-in{position:relative;max-width:1180px;margin:0 auto;width:100%;text-align:center}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-3)}
+.eyebrow b{color:var(--env);font-weight:500}
+.papertitle{font-family:var(--display);font-weight:700;font-size:clamp(24px,3.9vw,36px);
+  max-width:1020px;margin-inline:auto;text-wrap:balance;
+  line-height:1.14;letter-spacing:-.012em;margin-top:4px}
+@media(min-width:1120px){.papertitle{white-space:nowrap;max-width:none;font-size:33px}}
+.authors{margin:16px auto 0;max-width:1040px;text-wrap:balance;font-size:14.5px;line-height:1.8;color:var(--ink-2)}
+.authors sup{color:var(--ink-3);font-size:.66em}
+.affils{margin:7px auto 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);
+  letter-spacing:.02em}
+.affils sup{font-size:.75em}
+.affils{line-height:1.7}
+.fnotes{margin:8px auto 0;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);opacity:.92}
+.fnotes sup{font-size:.8em}
+.topcta{margin-top:30px}
+.tagline{font-family:var(--display);font-weight:700;font-size:clamp(19px,2.3vw,27px);
+  line-height:1.3;margin:34px auto 0;max-width:820px;letter-spacing:-.012em;color:var(--ink)}
+h1.hero-h{font-family:var(--display);font-weight:700;font-size:clamp(32px,5vw,58px);line-height:1.06;
+  letter-spacing:-.015em;margin-top:14px}
+h1 .grad,.tagline .grad{color:var(--env)}
+.hero-sub{max-width:700px;margin:22px auto 0;color:var(--ink-2);font-size:16.5px}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+/* ---------- fig3: execution loop + designer loop ---------- */
+.stage{position:relative;margin:24px auto 0;max-width:1100px;display:grid;
+  grid-template-columns:minmax(0,640px) minmax(0,1fr);gap:26px;align-items:start;text-align:left;
+  transition:opacity .8s;will-change:transform}
+@media(max-width:1080px){.stage{grid-template-columns:minmax(0,1fr);justify-items:center}}
+.cyclecol{width:100%;max-width:640px;min-width:0}
+.cyclewrap{width:100%;min-width:0;overflow:hidden}
+.cyclebox{position:relative;width:640px;height:430px;transform-origin:0 0;margin:0 auto}
+.fsvg{position:absolute;inset:0;width:100%;height:100%}
+.farrp{stroke:var(--line-2)}
+.panelbox{position:absolute;border:1.5px dashed;border-radius:16px;pointer-events:none}
+.panelbox.exp{left:8px;top:26px;width:290px;height:378px;
+  border-color:color-mix(in srgb,var(--agent) 38%,var(--line-2))}
+.panelbox.dsp{left:378px;top:26px;width:254px;height:378px;
+  border-color:color-mix(in srgb,var(--mid) 42%,var(--line-2))}
+.ptitle{position:absolute;top:-10px;left:18px;font-family:var(--display);font-size:12px;
+  font-weight:700;letter-spacing:.12em;background:var(--bg0);padding:0 9px}
+.pt-p{color:var(--agent-deep)}
+[data-theme="dark"] .pt-p{color:var(--agent)}
+.pt-d{color:var(--mid)}
+.pol{position:absolute;z-index:6}
+.pol path{fill:var(--panel-2);stroke:var(--agent-line);stroke-width:1.8;vector-effect:non-scaling-stroke}
+.pol svg{display:block;filter:drop-shadow(0 5px 14px color-mix(in srgb,var(--agent) 34%,transparent));
+  transition:filter .3s}
+.pol.testing svg{filter:drop-shadow(0 0 22px color-mix(in srgb,var(--agent) 80%,transparent))}
+.pollab{position:absolute;left:0;right:12px;top:24px;text-align:center;font-family:var(--display);
+  font-weight:700;font-size:14px;letter-spacing:.05em;color:var(--ink)}
+.xa{fill:none;stroke:var(--line-2);stroke-width:1.8}
+.exarrows.hot .xa{stroke:var(--agent);stroke-dasharray:5 6;animation:xflow .5s linear infinite;
+  filter:drop-shadow(0 0 3px color-mix(in srgb,var(--agent) 60%,transparent))}
+@keyframes xflow{to{stroke-dashoffset:-11}}
+.xlab{position:absolute;font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-3);white-space:nowrap}
+.xdot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--agent);
+  box-shadow:0 0 8px var(--agent);opacity:0;z-index:6;transition:opacity .25s}
+.xd1{offset-path:path('M 176 138 C 196 150 196 178 176 192')}
+.xd2{offset-path:path('M 130 192 C 110 180 110 152 130 138');animation-delay:.4s!important}
+.steps{position:absolute;left:153px;top:157px;translate:-50% -50%;font-family:var(--mono);
+  font-size:10.5px;color:var(--agent-deep);background:var(--bg0);padding:1px 7px;border-radius:9px;
+  border:1px solid var(--agent-line);opacity:0;transition:opacity .2s;z-index:6;white-space:nowrap}
+[data-theme="dark"] .steps{color:var(--agent)}
+.steps.on{opacity:1}
+.traveler.cand{opacity:.94}
+.traveler.cand path{stroke-dasharray:6 4;stroke:var(--env)}
+.traveler.cand svg{filter:drop-shadow(0 10px 16px color-mix(in srgb,var(--env) 45%,transparent))}
+.stackc{position:absolute;inset:0;pointer-events:none;z-index:4}
+.stackc.flash .mini svg{animation:mok .7s ease}
+.mini{position:absolute;width:130px;height:37px;opacity:0;transition:opacity .4s,transform .4s;
+  transform:translateY(-10px);z-index:3}
+.mini.on{opacity:1;transform:none}
+.mini svg{display:block;width:100%;height:auto;overflow:visible;
+  filter:drop-shadow(0 3px 8px color-mix(in srgb,var(--env) 24%,transparent))}
+.mini path{fill:color-mix(in srgb,var(--env) 6%,var(--panel-2));stroke:var(--env-line);stroke-width:1.4;
+  vector-effect:non-scaling-stroke}
+.mini.envm path{fill:var(--panel-2);stroke:color-mix(in srgb,var(--env) 75%,transparent)}
+.mlab{position:absolute;left:0;right:0;top:13px;text-align:center;font-family:var(--mono);
+  font-size:9px;letter-spacing:.04em;color:var(--env-deep);pointer-events:none}
+[data-theme="dark"] .mlab{color:var(--env)}
+.mini.envm .mlab{font-weight:600;color:var(--ink)}
+@keyframes mok{30%{filter:drop-shadow(0 0 14px color-mix(in srgb,var(--env) 80%,transparent))}}
+.cp2 .mlab{font-family:var(--display);font-size:11.5px;font-weight:600;letter-spacing:.02em;top:12px}
+.cp2.envm .mlab{font-family:var(--display);font-size:14px;font-weight:700;top:11px}
+.dnode{position:absolute;left:421px;width:168px;height:46px;border:1.5px solid color-mix(in srgb,var(--mid) 45%,var(--line-2));
+  border-radius:11px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:.02em;color:var(--ink-2);
+  transition:all .3s;overflow:hidden;z-index:5}
+.dnode.on{border-color:var(--mid);color:var(--mid);
+  box-shadow:0 0 18px -3px color-mix(in srgb,var(--mid) 60%,transparent);
+  background:color-mix(in srgb,var(--mid) 7%,var(--panel-2))}
+.dnode.ok2{border-color:var(--env);color:var(--env-deep);
+  box-shadow:0 0 18px -3px color-mix(in srgb,var(--env) 65%,transparent)}
+[data-theme="dark"] .dnode.ok2{color:var(--env)}
+.dnode.bad2{border-color:var(--agent);color:var(--agent-deep);
+  box-shadow:0 0 18px -3px color-mix(in srgb,var(--agent) 65%,transparent)}
+[data-theme="dark"] .dnode.bad2{color:var(--agent)}
+.scanbar2{position:absolute;left:0;right:0;height:3px;background:color-mix(in srgb,var(--mid) 70%,transparent);
+  top:-6px;opacity:0}
+.dnode.scan .scanbar2{opacity:1;animation:scan2 .7s ease-in-out infinite alternate}
+@keyframes scan2{from{top:5px}to{top:38px}}
+.da{fill:none;stroke:var(--line-2);stroke-width:1.8}
+.rv{fill:none;stroke:color-mix(in srgb,var(--red) 55%,transparent);stroke-width:1.7;stroke-dasharray:4 5;
+  opacity:.45;transition:opacity .3s}
+.rv.hot{opacity:1;stroke:var(--red);animation:xflow .5s linear infinite;
+  filter:drop-shadow(0 0 3px color-mix(in srgb,var(--red) 55%,transparent))}
+.revlab{position:absolute;left:394px;top:294px;translate:-50% -50%;font-family:var(--sans);
+  font-size:10.5px;font-weight:500;color:var(--red);opacity:.55;transition:opacity .3s;white-space:nowrap;
+  background:var(--bg0);padding:1px 6px;border-radius:8px;z-index:6}
+.revlab.hot{opacity:1}
+.ca{fill:none;stroke:var(--line-2);stroke-width:1.8;transition:stroke .3s}
+.ca.hot{stroke:var(--env);stroke-dasharray:5 6;animation:xflow .5s linear infinite;
+  filter:drop-shadow(0 0 3px color-mix(in srgb,var(--env) 55%,transparent))}
+.ca.amb.hot{stroke:var(--agent);filter:drop-shadow(0 0 3px color-mix(in srgb,var(--agent) 55%,transparent))}
+.alab{position:absolute;font-family:var(--sans);font-size:10.5px;font-weight:500;color:var(--ink-2);
+  white-space:nowrap;translate:-50% 0;background:var(--bg0);padding:0 6px;z-index:3;line-height:1.45;text-align:center}
+.alab.amb2{color:var(--agent-deep)}
+[data-theme="dark"] .alab.amb2{color:var(--agent)}
+.tauchip{position:absolute;font-family:var(--mono);font-size:11px;color:var(--env-deep);
+  padding:4px 9px;border:1px solid var(--env-line);border-radius:8px;background:var(--env-ghost);
+  opacity:0;transition:left 1s cubic-bezier(.45,.05,.4,1),top .5s cubic-bezier(.45,.05,.4,1),opacity .3s;white-space:nowrap;z-index:7}
+[data-theme="dark"] .tauchip{color:var(--env)}
+.tauchip.amb3{color:var(--agent-deep);border-color:var(--agent-line);background:var(--agent-ghost)}
+[data-theme="dark"] .tauchip.amb3{color:var(--agent)}
+.tauchip.show{opacity:1}
+.traveler{opacity:0;z-index:8}
+.traveler.show{opacity:1}
+.vres{position:absolute;left:50%;top:-25px;translate:-50% 0;font-family:var(--display);
+  font-weight:700;font-size:18px;opacity:0;transition:opacity .25s;
+  text-shadow:0 0 6px var(--bg0)}
+.vres.ok{opacity:1;color:var(--env)}
+.vres.bad{opacity:1;color:var(--agent)}
+.brk{position:absolute;left:233px;width:9px;border:2px solid color-mix(in srgb,var(--env) 80%,transparent);
+  border-left:none;border-radius:0 6px 6px 0;opacity:0;
+  transition:top .5s cubic-bezier(.2,.8,.3,1.15),height .5s cubic-bezier(.2,.8,.3,1.15),opacity .3s;z-index:5}
+.brk.on{opacity:1}
+.brklab{position:absolute;left:249px;font-family:var(--mono);font-size:14px;font-weight:700;
+  color:var(--env-deep);opacity:0;transition:opacity .3s,top .5s cubic-bezier(.2,.8,.3,1.15);
+  white-space:nowrap;z-index:5}
+[data-theme="dark"] .brklab{color:var(--env)}
+.brklab.on{opacity:1}
+.brklab.pulse2{animation:labpulse .55s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes labpulse{40%{scale:1.35}100%{scale:1}}
+.okbadge{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.02em;
+  padding:6px 14px;border-radius:30px;transition:opacity .5s;border:1px solid color-mix(in srgb,var(--env) 65%,transparent);
+  color:var(--env-deep);background:var(--panel-2);opacity:0;transform:translateY(10px) scale(.86);
+  white-space:nowrap;z-index:9}
+[data-theme="dark"] .okbadge{color:var(--env);background:var(--env-ghost)}
+.okbadge.pop{animation:pop .6s cubic-bezier(.2,.9,.3,1.25) forwards}
+@keyframes pop{0%{opacity:0;transform:translateY(12px) scale(.82)}55%{opacity:1;transform:translateY(-2px) scale(1.07)}
+  100%{opacity:1;transform:translateY(0) scale(1)}}
+.ctrlbar{display:flex;gap:8px;align-items:center;margin-top:12px;justify-content:center}
+.cbtn{font-family:var(--mono);font-size:11.5px;padding:6px 11px;border-radius:8px;
+  border:1px solid var(--line-2);background:var(--panel);color:var(--ink-2);cursor:pointer;
+  transition:all .2s}
+.cbtn:hover{border-color:var(--env);color:var(--env)}
+.cbtn.on{border-color:var(--env);color:var(--env);background:var(--env-ghost)}
+.legendrow{display:flex;gap:20px;justify-content:center;margin-top:10px;font-family:var(--sans);
+  font-size:12px;font-weight:500;color:var(--ink-3)}
+.legendrow span{display:flex;align-items:center;gap:6px}
+.lg{width:9px;height:9px;border-radius:50%;display:inline-block}
+.lp{background:var(--agent)}.ld{background:var(--mid)}.le{background:var(--env)}
+.whorow{margin-bottom:9px;display:flex;gap:7px;flex-wrap:wrap}
+.who{font-family:var(--mono);font-size:9px;letter-spacing:.1em;font-weight:600;
+  padding:3.5px 9px;border-radius:12px;display:inline-block}
+.wp{color:var(--agent-deep);background:var(--agent-ghost);border:1px solid var(--agent-line)}
+[data-theme="dark"] .wp{color:var(--agent)}
+.wp2{color:var(--agent-deep);border:1px dashed var(--agent-line);background:transparent}
+[data-theme="dark"] .wp2{color:var(--agent)}
+.wd{color:var(--mid);background:color-mix(in srgb,var(--mid) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--mid) 55%,transparent)}
+.ctab::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-right:6px;vertical-align:1px}
+.ctab[data-o="p"]::before{background:var(--agent)}
+.ctab[data-o="d"]::before{background:var(--mid)}
+/* right: live case card */
+.casecard{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  backdrop-filter:blur(6px);overflow:hidden;width:100%;max-width:560px;
+  box-shadow:0 8px 30px -18px color-mix(in srgb,var(--ink) 32%,transparent)}
+.casetabs{display:flex;gap:2px;padding:10px 12px 0;border-bottom:1px solid var(--line)}
+.ctab{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:8px 12px;
+  border:1px solid transparent;border-bottom:none;border-radius:9px 9px 0 0;background:transparent;
+  color:var(--ink-3);cursor:pointer;transition:all .2s}
+.ctab:hover{color:var(--ink)}
+.ctab.on{background:var(--bg2);color:var(--env);border-color:var(--line)}
+.casebody{position:relative;min-height:300px;padding:20px 22px}
+.pane{position:absolute;inset:20px 22px;opacity:0;transform:translateY(8px);
+  transition:opacity .16s ease,transform .16s ease;pointer-events:none}
+.pane.on{opacity:1;transform:none;pointer-events:auto;
+  transition:opacity .45s ease .14s,transform .45s ease .14s}
+.pane h6{font-family:var(--display);font-size:15.5px;font-weight:600;letter-spacing:.01em;margin:0 0 12px}
+.clog{font-family:var(--mono);font-size:12px;line-height:1.7;background:var(--bg2);
+  border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--ink-2);
+  overflow-x:auto;white-space:pre}
+.clog .cmt{color:var(--ink-3)}
+.clog .bad{color:var(--red)}
+.clog .warn2{color:var(--agent-deep)}
+[data-theme="dark"] .clog .warn2{color:var(--agent)}
+.clog .kw2{color:#8B5CF6}
+[data-theme="dark"] .clog .kw2{color:#C792EA}
+.clog .fn2{color:var(--env-deep)}
+[data-theme="dark"] .clog .fn2{color:var(--env)}
+.clog .st2{color:var(--agent-deep)}
+[data-theme="dark"] .clog .st2{color:var(--agent)}
+.cquote{font-size:14.5px;line-height:1.7;color:var(--ink-2);border-left:3px solid var(--mid);
+  padding:6px 0 6px 16px;margin:0}
+.cquote b{color:var(--ink)}
+.cnote{font-size:12.5px;color:var(--ink-3);margin:12px 0 0;font-family:var(--mono);line-height:1.6}
+.verdictline .okc{color:var(--env-deep)}
+[data-theme="dark"] .verdictline .okc{color:var(--env)}
+.verdictline .badc{color:var(--agent-deep)}
+[data-theme="dark"] .verdictline .badc{color:var(--agent)}
+.bigexpr{font-family:var(--mono);font-size:clamp(16px,2vw,21px);color:var(--env-deep);
+  background:var(--env-ghost);border:1px solid var(--env-line);border-radius:12px;
+  padding:22px 20px;text-align:center;font-weight:600}
+[data-theme="dark"] .bigexpr{color:var(--env)}
+.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.bicon{width:16px;height:16px;margin-right:9px;vertical-align:-3px}
+.btn-hero{font-family:var(--sans);font-size:13.5px;font-weight:500;padding:10px 22px;
+  border-radius:999px;border:1px solid #363636;color:#fff;background:#363636;transition:all .2s;text-decoration:none}
+.btn-hero:hover{background:#4a4a4a;border-color:#4a4a4a;color:#fff;text-decoration:none;transform:translateY(-1px)}
+[data-theme="dark"] .btn-hero{background:#E6EDF3;border-color:#E6EDF3;color:#0D1117}
+[data-theme="dark"] .btn-hero:hover{background:#cfd8e0;border-color:#cfd8e0;color:#0D1117}
+.btn-hero.primary{background:var(--env-deep);border-color:var(--env-deep);color:#fff;font-weight:600}
+.btn-hero.primary:hover{background:var(--env);border-color:var(--env);color:#fff}
+[data-theme="dark"] .btn-hero.primary{background:var(--env-deep);border-color:var(--env-deep);color:#fff}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.sec{max-width:1060px;margin:0 auto;padding:96px 26px 20px}
+.sec-head{max-width:840px}
+.secno{font-family:var(--mono);font-size:12px;letter-spacing:.24em;color:var(--env);
+  display:inline-flex;align-items:center;gap:12px}
+.secno::after{content:"";width:56px;height:1px;background:linear-gradient(90deg,var(--env),transparent)}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(25px,2.9vw,35px);line-height:1.12;
+  letter-spacing:-.012em;margin-top:12px}
+.lead{margin-top:16px;color:var(--ink-2);font-size:17px;max-width:var(--measure)}
+.lead b,strong{color:var(--ink)}
+h3{font-family:var(--display);font-size:21px;font-weight:600;margin-top:40px;color:var(--ink)}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px)}
+.rv.in{opacity:1;transform:none;transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv.d1.in{transition-delay:.08s}.rv.d2.in{transition-delay:.16s}.rv.d3.in{transition-delay:.24s}
+
+/* analogy panel */
+.anal{margin-top:36px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  backdrop-filter:blur(6px);overflow:hidden;
+  box-shadow:0 6px 26px -18px color-mix(in srgb,var(--ink) 32%,transparent)}
+.arow{display:grid;grid-template-columns:150px 1fr 1fr;border-top:1px solid var(--line)}
+.arow.ahead{border-top:none}
+.acell{padding:13px 18px;font-size:14.5px;color:var(--ink-2);line-height:1.55}
+.acell b{color:var(--ink)}
+.arow .acell:nth-child(3){background:color-mix(in srgb,var(--env) 4.5%,transparent)}
+.alabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:center}
+.hcell{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.07em;
+  display:flex;align-items:center;gap:9px}
+.hamber{color:var(--agent-deep)}
+[data-theme="dark"] .hamber{color:var(--agent)}
+.hteal{color:var(--env-deep)}
+[data-theme="dark"] .hteal{color:var(--env)}
+.ours{font-family:var(--mono);font-size:8.5px;font-weight:600;letter-spacing:.12em;padding:2.5px 8px;
+  border-radius:10px;border:1px solid var(--env-line);color:var(--env-deep);background:var(--env-ghost)}
+[data-theme="dark"] .ours{color:var(--env)}
+.ice2{font-style:normal;font-size:.85em;opacity:.8}
+.alast .acell:nth-child(2){box-shadow:inset 3px 0 0 var(--agent-line)}
+.alast .acell:nth-child(3){box-shadow:inset 3px 0 0 var(--env-line)}
+@media(max-width:760px){
+  .arow{grid-template-columns:110px 1fr 1fr}
+  .acell{padding:11px 12px;font-size:12.5px}
+}
+figure{margin:38px 0 0}
+figcaption,.figcap{font-size:14px;color:var(--ink-2);margin-top:14px;line-height:1.6}
+.figcap{margin-top:14px}
+.figcap b{color:var(--ink)}
+figcaption b{color:var(--ink)}
+.fnum{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--env);margin-right:9px}
+
+/* ============================================================
+   PLAYGROUND (preserved DOM, reskinned)
+   ============================================================ */
+.boot{display:flex;align-items:center;gap:11px;margin-top:30px;padding:12px 16px;border-radius:10px;
+  border:1px solid var(--line);background:var(--panel);font-family:var(--mono);font-size:12px;color:var(--ink-2);overflow-wrap:anywhere;word-break:break-word}
+.boot .sp{width:12px;height:12px;border:2px solid var(--line-2);border-top-color:var(--env);border-radius:50%;
+  animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.boot.done{border-color:var(--env-line);color:var(--env);
+  box-shadow:0 4px 24px -10px color-mix(in srgb,var(--env) 45%,transparent)}
+.boot.done .sp{display:none}
+.boot.fail{border-color:var(--agent);color:var(--ink-2);align-items:flex-start;flex-direction:column;gap:8px}
+.boot.fail .sp{display:none}
+.boot .why{color:var(--agent);font-weight:600}
+.boot pre{background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:10px 12px;
+  font-family:var(--mono);font-size:11.5px;color:var(--ink);white-space:pre;overflow-x:auto;width:100%;margin:2px 0}
+.boot .hint{color:var(--ink-3);font-size:11px}
+.pg-grid{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);gap:18px;margin-top:16px}
+@media(max-width:1000px){.pg-grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden;backdrop-filter:blur(6px);
+  box-shadow:0 6px 26px -18px color-mix(in srgb,var(--ink) 32%,transparent)}
+.phead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);gap:10px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--env) 5%,transparent),transparent)}
+.phead h5{font-size:12.5px;font-family:var(--mono);font-weight:600;letter-spacing:.06em;color:var(--ink);text-transform:uppercase}
+.phead .tag{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-align:right}
+.dual{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:600px){.dual{grid-template-columns:1fr}}
+.view{padding:14px 16px}
+.view+.view{border-left:1px solid var(--line)}
+.vhead{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vhead .badge2{font-size:9.5px;padding:2px 7px;border-radius:20px;border:1px solid var(--line-2);color:var(--ink-3)}
+.view.obs .vhead{color:var(--env)}.view.obs .vhead .badge2{border-color:var(--env-line);color:var(--env)}
+.view.diverged{background:var(--amber-ghost)}
+.view.diverged .vhead{color:var(--agent)}.view.diverged .vhead .badge2{border-color:var(--agent);color:var(--agent)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;min-height:68px;align-content:flex-start}
+.card24{min-width:48px;height:62px;padding:0 8px;border-radius:10px;border:1.5px solid var(--line-2);
+  background:linear-gradient(170deg,var(--card24-a),var(--card24-b));display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:19px;font-weight:600;color:var(--ink);transition:all .18s;position:relative}
+.card24.click{cursor:pointer}
+.card24.click:hover{border-color:var(--env);transform:translateY(-2px);
+  box-shadow:0 6px 18px -8px color-mix(in srgb,var(--env) 50%,transparent)}
+.card24.sel{border-color:var(--env);background:var(--env-ghost);color:var(--env);
+  box-shadow:0 0 0 1px var(--env),0 4px 20px -6px color-mix(in srgb,var(--env) 55%,transparent)}
+.card24.sel::after{content:attr(data-ord);position:absolute;top:2px;right:5px;font-size:9px;opacity:.75}
+.card24.masked{color:var(--agent);border-color:var(--agent);border-style:dashed}
+@keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-7px)}30%{transform:translateX(6px)}
+  45%{transform:translateX(-5px)}60%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+.histlist{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.65;min-height:18px}
+.pending{padding:10px 16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--ink-3);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pending b{color:var(--env);font-weight:600}
+.ops{display:flex;gap:7px;flex-wrap:wrap;padding:11px 16px;border-top:1px solid var(--line);align-items:center}
+.op{min-width:52px;height:38px;padding:0 10px;border-radius:9px;border:1px solid var(--line-2);background:var(--bg2);
+  color:var(--ink);font-family:var(--mono);font-size:12.5px;cursor:pointer;transition:all .16s}
+.op:hover{border-color:var(--env);color:var(--env);
+  box-shadow:0 3px 14px -6px color-mix(in srgb,var(--env) 55%,transparent)}
+.op.rejected{animation:shake .42s ease;background:var(--amber-ghost);border-color:var(--agent);color:var(--agent)}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;font-weight:500;
+  padding:9px 13px;border-radius:9px;border:1px solid var(--line-2);color:var(--ink);background:transparent;
+  transition:all .18s;cursor:pointer}
+.btn:hover{border-color:var(--env);color:var(--env)}
+.btn.primary{background:linear-gradient(120deg,var(--env-deep),var(--env) 140%);border-color:transparent;color:var(--onenv);font-weight:600}
+.btn.primary:hover{color:var(--onenv);box-shadow:0 4px 22px -6px color-mix(in srgb,var(--env) 60%,transparent)}
+.btn:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
+.spacer{flex:1}
+.warnbar{display:none;margin:0 16px 13px;padding:10px 13px;border-radius:9px;border:1px solid var(--agent);
+  background:var(--amber-ghost);color:var(--agent-deep);font-family:var(--mono);font-size:11.5px;line-height:1.6}
+[data-theme="dark"] .warnbar{color:var(--agent)}
+.warnbar.on{display:block}
+.verdict{margin:0 16px 13px;padding:11px 14px;border-radius:9px;font-family:var(--mono);font-size:12.5px;
+  border:1px solid var(--line);background:var(--bg2);color:var(--ink-2)}
+.verdict.ok{border-color:var(--env);color:var(--env-deep);background:var(--env-ghost);
+  box-shadow:0 4px 28px -8px color-mix(in srgb,var(--env) 50%,transparent)}
+[data-theme="dark"] .verdict.ok{color:var(--env)}
+.verdict.blocked{border-color:var(--agent);color:var(--agent-deep);background:var(--amber-ghost)}
+[data-theme="dark"] .verdict.blocked{color:var(--agent)}
+.traj{padding:12px 16px;border-top:1px solid var(--line);max-height:168px;overflow-y:auto}
+.traj-head{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:7px;display:flex;justify-content:space-between}
+.traj-head .cnt{letter-spacing:0;text-transform:none}
+.trow{font-family:var(--mono);font-size:11px;padding:2.5px 0;color:var(--ink-2);display:flex;gap:8px;align-items:baseline}
+.trow .i{color:var(--ink-3);min-width:18px}
+.trow.blocked{color:var(--agent-deep)}
+[data-theme="dark"] .trow.blocked{color:var(--agent)}
+.trow.blocked .act{text-decoration:line-through;opacity:.75}
+.trow.win{color:var(--env-deep)}
+[data-theme="dark"] .trow.win{color:var(--env)}
+.traj-empty{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.tabs{display:flex;gap:4px;padding:10px 12px 0;flex-wrap:wrap}
+.tab{font-family:var(--mono);font-size:11.5px;padding:6px 11px;border-radius:8px 8px 0 0;border:1px solid transparent;
+  border-bottom:none;background:transparent;color:var(--ink-3);cursor:pointer;transition:all .15s}
+.tab:hover{color:var(--ink)}
+.tab.active{background:var(--bg2);color:var(--env);border-color:var(--line)}
+.editor{width:100%;min-height:266px;background:var(--bg2);border:none;border-top:1px solid var(--line);
+  outline:none;resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--ink);padding:14px;tab-size:4}
+.docline{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding:11px 14px;line-height:1.6;border-top:1px solid var(--line)}
+.docline code{color:var(--env);background:none;border:none;padding:0}
+.docline b{color:var(--ink)}
+.toolbar{display:flex;gap:8px;padding:11px 14px;border-top:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.status{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto;text-align:right;max-width:56%}
+.status.err{color:var(--red)}.status.ok{color:var(--env)}
+.stack-view{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px;align-items:center}
+.stack-chip{font-family:var(--mono);font-size:10.5px;padding:4px 10px;border-radius:20px;border:1px solid var(--env-line);
+  background:var(--env-ghost);color:var(--env-deep);display:flex;align-items:center;gap:5px}
+[data-theme="dark"] .stack-chip{color:var(--env)}
+.stack-chip .x{cursor:pointer;opacity:.6}.stack-chip .x:hover{opacity:1}
+.empty-stack{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.stackexpr{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding:0 14px 12px}
+.stackexpr b{color:var(--env)}
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+.vpanel{margin-top:38px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:34px 30px 24px;backdrop-filter:blur(6px);
+  box-shadow:0 6px 26px -18px color-mix(in srgb,var(--ink) 32%,transparent)}
+.vtitle{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ink-3);
+  margin-bottom:26px;text-align:left}
+.vchart{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.vchart4{grid-template-columns:repeat(4,1fr);gap:clamp(10px,2vw,20px)}
+.vchart4 .vplot{gap:clamp(5px,1vw,11px);padding:0 2px}
+.vchart4 .vcol{width:clamp(24px,4.2vw,42px)}
+.vchart4 .vglab{font-size:11px;line-height:1.45}
+@media(max-width:940px){.vchart4 .vglab{font-size:10px}.vchart4 .vval{font-size:10.5px}}
+@media(max-width:760px){.vchart.vchart4{grid-template-columns:repeat(2,1fr);gap:44px 12px}}
+@media(max-width:680px){.vchart{grid-template-columns:1fr;gap:44px}}
+.vplot{position:relative;display:flex;gap:18px;justify-content:center;align-items:flex-end;
+  height:232px;padding:0 18px;border-bottom:1.5px solid var(--line-2);
+  background:repeating-linear-gradient(to top,color-mix(in srgb,var(--line) 70%,transparent) 0 1px,transparent 1px 58px)}
+.vcol{position:relative;width:50px;height:100%}
+.vfill{position:absolute;left:0;right:0;bottom:0;height:0;border-radius:9px 9px 0 0;
+  transition:height 2.2s cubic-bezier(.26,.82,.3,1)}
+.vcol.a .vfill{background:var(--fillA-bg)}
+.vcol.b .vfill{background:linear-gradient(180deg,var(--salmon),var(--salmon-2))}
+.vcol.c .vfill{background:linear-gradient(180deg,var(--env),var(--env-deep));
+  box-shadow:0 4px 16px -6px color-mix(in srgb,var(--env) 40%,transparent)}
+.vcol.c .vfill::after{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.34),transparent 42%)}
+.vval{position:absolute;left:50%;translate:-50% 0;bottom:8px;font-family:var(--mono);font-size:12px;
+  font-weight:600;color:var(--ink-2);white-space:nowrap;opacity:0;
+  transition:bottom 2.2s cubic-bezier(.26,.82,.3,1),opacity .6s ease 1.2s}
+.vval.in{opacity:1}
+.vcol.c .vval{color:var(--env-deep);font-size:12.5px}
+[data-theme="dark"] .vcol.c .vval{color:var(--env)}
+.vdelta{position:absolute;left:50%;translate:-50% 0;max-width:none;bottom:8px;font-family:var(--mono);font-size:10px;
+  font-weight:600;padding:2.5px 8px;border-radius:11px;white-space:nowrap;
+  color:var(--onenv);background:linear-gradient(120deg,var(--env-deep),var(--env));
+  box-shadow:0 3px 14px -4px color-mix(in srgb,var(--env) 70%,transparent);
+  opacity:0;scale:.7;
+  transition:bottom 2.2s cubic-bezier(.26,.82,.3,1),opacity .55s ease 1.9s,scale .6s cubic-bezier(.2,.9,.3,1.4) 1.9s}
+.vdelta.in{opacity:1;scale:1}
+.vglab{margin-top:12px;text-align:center;font-family:var(--mono);font-size:12.5px;color:var(--ink-2);
+  letter-spacing:.04em}
+.legend{display:flex;gap:26px;flex-wrap:wrap;justify-content:flex-start;font-family:var(--sans);font-size:13px;font-weight:500;letter-spacing:.01em;color:var(--ink-2);margin-top:22px}
+.legend i{display:inline-block;width:8px;height:17px;border-radius:3px 3px 1.5px 1.5px;vertical-align:-3px;margin-right:8px}
+.sw.swa{background:var(--fillA-bg)}
+.sw.swb{background:linear-gradient(180deg,var(--salmon),var(--salmon-2))}
+.sw.swc{background:linear-gradient(180deg,var(--env),var(--env-deep));
+  box-shadow:0 2px 8px -2px color-mix(in srgb,var(--env) 55%,transparent)}
+
+/* callout */
+.callout{border-left:3px solid var(--env);background:var(--env-ghost);padding:20px 24px;border-radius:0 12px 12px 0;
+  margin-top:44px;max-width:var(--measure)}
+.callout h4{font-family:var(--display);font-size:15px;font-weight:600;margin:0}
+.callout p{font-size:14.5px;margin-top:9px;color:var(--ink-2)}
+
+/* ============================================================
+   CITE + FOOTER
+   ============================================================ */
+.bib{font-family:var(--mono);font-size:12.5px;line-height:1.65;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:12px;padding:22px;color:var(--ink-2);overflow-x:auto;position:relative;margin-top:26px;max-width:var(--measure)}
+.copy-bib{position:absolute;top:12px;right:12px}
+/* ============================================================
+   FX LAYER — progress, wire traffic, impact, spotlight, shine
+   ============================================================ */
+#wiretraffic{position:absolute;inset:0;width:100%;height:100%}
+.stage{will-change:transform}
+.shock{position:absolute;left:200px;width:170px;height:48px;
+  border:2px solid var(--env);border-radius:10px;opacity:0;pointer-events:none;z-index:12}
+.shock.go{animation:shockk .6s ease-out}
+@keyframes shockk{0%{opacity:.85;scale:.9}100%{opacity:0;scale:1.28}}
+.asm.impact{animation:impact .32s ease}
+@keyframes impact{25%{translate:0 3px}55%{translate:-2px -1px}80%{translate:2px 1px}}
+.spark{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--env);
+  box-shadow:0 0 9px var(--env);pointer-events:none;z-index:9}
+/* cursor spotlight on cards */
+/* primary CTA shine sweep */
+.btn-hero.primary{position:relative;overflow:hidden}
+.btn-hero.primary::after{content:"";position:absolute;top:0;bottom:0;left:-45%;width:34%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.6),transparent);
+  transform:skewX(-18deg);transition:left .55s ease}
+.btn-hero.primary:hover::after{left:125%}
+/* theme swap: circular wipe via View Transitions */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}
+::view-transition-new(root){z-index:2}
+
+.herofigs{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;
+  max-width:1060px;margin:38px auto 0;align-items:stretch}
+@media(max-width:980px){.herofigs{grid-template-columns:minmax(0,1fr);gap:16px}}
+.herofigs .heropanel{margin:0;height:100%;max-width:none;overflow:hidden}
+.lpanel{display:flex;flex-direction:column}
+.lchart{width:100%;display:block;margin-top:6px;overflow:visible}
+.lchart .gl{stroke:var(--line);stroke-width:1}
+.lchart .ax-l{stroke:var(--line-2);stroke-width:1.2}
+.lchart .ax{font-family:var(--mono);font-size:11px;fill:var(--ink-3)}
+.lchart .axt{font-family:var(--sans);font-size:12px;font-weight:600;fill:var(--ink-2);letter-spacing:.01em}
+.lchart .ln{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.lchart .dot{opacity:0}
+.lchart .endlab{font-family:var(--sans);font-size:12.5px;font-weight:600;opacity:0}
+.lchart .endnote{font-family:var(--sans);font-size:10.5px;font-weight:500;opacity:0}
+.lchart .endval{font-family:var(--mono);font-size:11.5px;font-weight:600;opacity:0;
+  font-variant-numeric:tabular-nums}
+.lchart .sm .ln{stroke:color-mix(in srgb,var(--fillA-bg) 78%,var(--ink-3))}
+.lchart .sm .dot{fill:color-mix(in srgb,var(--fillA-bg) 78%,var(--ink-3))}
+.lchart .sm .endlab,.lchart .sm .endval,.lchart .sm .endnote{fill:var(--ink-3)}
+.lchart .lt .ln{stroke:var(--salmon-2)} .lchart .lt .dot{fill:var(--salmon-2)}
+.lchart .lt .endlab,.lchart .lt .endval,.lchart .lt .endnote{fill:var(--salmon-2)}
+[data-theme="dark"] .lchart .lt .endlab,[data-theme="dark"] .lchart .lt .endval,[data-theme="dark"] .lchart .lt .endnote{fill:var(--salmon)}
+.lchart .eh .ln{stroke:var(--env-deep);stroke-width:2.8}
+.lchart .eh .dot{fill:var(--env-deep)}
+.lchart .eh .endlab,.lchart .eh .endval,.lchart .eh .endnote{fill:var(--env-deep)}
+[data-theme="dark"] .lchart .eh .endlab,[data-theme="dark"] .lchart .eh .endval,.lchart.anim .ln{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);
+  transition:stroke-dashoffset 4s cubic-bezier(.38,.66,.3,1)}
+
+
+
+
+.lchart.in .dot,.lchart.in .endlab,.lchart.in .endnote,.lchart.in .endval{opacity:1}
+
+
+.heropanel{max-width:1060px;margin:38px auto 0;text-align:left;padding:28px 30px 20px}
+.heropanel .vchart{gap:clamp(10px,2vw,26px)}
+.heropanel .vgroup{min-width:0}
+.heropanel .vplot{height:216px;display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;padding:0;align-items:end;justify-items:center;min-width:0}
+.heropanel .vcol{width:100%;max-width:46px;min-width:0}
+.heropanel .vgroup:last-child .vdelta{left:auto;right:0;translate:0 0}
+.heropanel .vgroup:first-child .vdelta{left:0;right:auto;translate:0 0}
+.heropanel .vtitle{margin-bottom:20px}
+.heropanel .legend{margin-top:16px}
+.stage{margin-top:38px}
+.morep{margin-top:44px;border:1px solid var(--line);border-radius:16px;padding:26px 28px 20px;
+  background:color-mix(in srgb,var(--env) 4%,var(--bg0))}
+.morep h4{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 18px;letter-spacing:.01em}
+.mrow{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+@media(max-width:820px){.mrow{grid-template-columns:1fr;gap:18px}}
+.mitem b{display:block;font-family:var(--display);font-size:clamp(20px,2.2vw,26px);font-weight:700;
+  color:var(--env-deep);margin-bottom:6px}
+[data-theme="dark"] .mitem b{color:var(--env)}
+.mitem span{font-size:13.5px;line-height:1.6;color:var(--ink-2)}
+.mfoot{margin:20px 0 0;font-size:13px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:14px}
+.take{max-width:840px;margin-top:6px}
+.take p{font-size:16.5px;line-height:1.85;color:var(--ink-2);margin:0 0 18px}
+.take b{color:var(--ink)}
+.runsec{text-align:left;padding-bottom:120px}
+.runsec h2{font-family:var(--display);font-size:clamp(22px,2.5vw,28px);font-weight:700;margin:0 0 16px}
+.runsec .lead{max-width:840px;margin:16px 0 0}
+.runcta{margin-top:26px;justify-content:flex-start}
+.vval,.vdelta,.mitem b,.brklab,.steps{font-variant-numeric:tabular-nums}
+a:focus-visible,button:focus-visible{outline:2px solid var(--env);outline-offset:2px;border-radius:6px}
+.absec{padding-top:84px;padding-bottom:8px}
+.abstext{max-width:860px;font-size:16px;line-height:1.85;color:var(--ink-2);
+  text-align:justify;hyphens:auto;margin-top:2px}
+.abstext b{color:var(--ink)}
+.sec{border-top:1px solid color-mix(in srgb,var(--line) 80%,transparent)}
+@media(max-width:760px){
+  .hud nav a[href^="#"]{display:none}
+  .hud-in{padding:11px 16px;gap:12px}
+  .sec{padding-left:18px;padding-right:18px}
+  .arow{grid-template-columns:92px 1fr 1fr}
+  .acell{padding:10px 9px;font-size:11.5px}
+  .hcell{font-size:11px;gap:5px}
+  .ours{display:none}
+  .alabel{font-size:8.5px;letter-spacing:.06em}
+  .vpanel{padding:20px 14px 14px}
+  .heropanel{padding:20px 14px 14px}
+  .vchart{gap:12px}
+  .vplot{gap:7px;height:158px;background-size:auto 40px}
+  .heropanel .vplot{height:168px}
+  .vglab{font-size:10.5px;margin-top:9px}
+  .vval{font-size:10.5px}
+  .vdelta{font-size:9px;padding:2px 6px}
+  .vcol{width:clamp(20px,7vw,40px)}
+  .legend{gap:12px;font-size:11px}
+  .casecard{max-width:100%}
+  .casebody{padding:16px 14px;min-height:270px}
+  .pane{inset:16px 14px}
+  .clog{font-size:10.5px}
+  .btn-hero{font-size:12.5px;padding:9px 16px}
+}
+/* motion + spacing system */
+:root{--ease:cubic-bezier(.2,.7,.3,1);--t-fast:.14s;--t-base:.24s;--t-slow:.5s}
+a,button,.tab,.ctab,.cbtn,.btn-hero,.acell,.dnode{transition-timing-function:var(--ease)}
+/* interactive affordance: everything clickable answers back */
+.btn-hero:active{transform:translateY(1px) scale(.995)}
+.cbtn:active,.tab:active,.ctab:active{transform:scale(.97)}
+.hud nav a{position:relative}
+.hud nav a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:1.5px;
+  background:var(--env);transform:scaleX(0);transform-origin:left;transition:transform var(--t-base) var(--ease)}
+.hud nav a:hover::after{transform:scaleX(1)}
+.anal .arow:not(.ahead):hover .acell{background:color-mix(in srgb,var(--env) 3%,transparent)}
+.anal .arow .acell{transition:background var(--t-base)}
+/* focus/hover on the panels: lift, not glow */
+.vpanel,.casecard,.panel{transition:box-shadow var(--t-slow) var(--ease)}
+/* ============================================================
+   ACADEMIC SKIN — Nerfies-style restraint
+   ============================================================ */
+.panel,.vpanel,.casecard,.anal,.bib{backdrop-filter:none;
+  box-shadow:0 1px 3px rgba(15,20,30,.05)}
+.hud.scrolled{backdrop-filter:none;background:var(--bg0);box-shadow:0 1px 0 var(--line)}
+.callout{background:color-mix(in srgb,var(--env) 5%,var(--bg0))}
+.papertitle,h2{letter-spacing:-.018em}
+.tagline{letter-spacing:-.008em;color:var(--ink)}
+.hero{padding-top:78px}
+::selection{background:color-mix(in srgb,var(--env) 18%,transparent)}
+</style>
 </head>
 <body>
-<h1>Hello World</h1>
-<p>envharness.github.io is live.</p>
+
+
+<!-- ============ HUD NAV ============ -->
+<div class="hud" id="hud">
+  <div class="hud-in">
+    <a class="wordmark" href="#top"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="3" y="3" width="58" height="58" rx="15" fill="#3273DC"/><g transform="translate(11.5,13) scale(0.64)"><path d="M 4 30 A 12 12 0 0 1 16 18 H 21 C 28 18 22 5 32 5 C 42 5 36 18 43 18 H 48 A 12 12 0 0 1 60 30 V 47 A 12 12 0 0 1 48 59 H 16 A 12 12 0 0 1 4 47 Z" fill="#fff"/></g></svg>EnvHarness</a>
+    <nav>
+      <a href="#idea" class="hide-s">Idea</a>
+      <a href="#play">Playground</a>
+      <a href="#designer" class="hide-s">Designer</a>
+      <a href="#results" class="hide-s">Results</a>
+      <a href="#takeaway" class="hide-s">Discussion</a>
+      <a href="#cite" class="hide-s">Cite</a>
+      <a href="#" class="navbtn">Paper ↗</a>
+      <button class="tbtn" id="themeBtn">Dark</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <div class="hero-in">
+    <h1 class="papertitle"><span class="grad">EnvHarness</span>: Awakening Static Worlds for Agent Learning</h1>
+    <p class="authors">Chengsong Huang<sup>1*</sup>, Zifeng Wang<sup>2†</sup>, Rujun Han<sup>2</sup>, Jun Yan<sup>2</sup>, Yanfei Chen<sup>2</sup>, Zoey CuiZhu<sup>2</sup>, Ke Jiang<sup>2</sup>, Peng Xia<sup>4</sup>, Han Yu<sup>2</sup>, Yufan Zhuang<sup>2</sup>, Yifei Ming<sup>2</sup>, Jiaqi Pan<sup>3</sup>, Bhavana Dalvi Mishra<sup>2</sup>, Jiaxin Huang<sup>1</sup>, Burak Gokturk<sup>2</sup>, Tomas Pfister<sup>2</sup> and Chen-Yu Lee<sup>2†</sup></p>
+    <p class="affils"><sup>1</sup>Washington University in St. Louis · <sup>2</sup>Google Cloud AI Research<br><sup>3</sup>Google Cloud · <sup>4</sup>University of North Carolina at Chapel Hill</p>
+    <p class="fnotes"><sup>*</sup>This work was done while Chengsong interned at Google Cloud AI Research&nbsp;&nbsp;·&nbsp;&nbsp;<sup>†</sup>Corresponding authors</p>
+    <p class="tagline">Agents got a harness. <span class="grad">Now the environment gets one.</span></p>
+    <div class="cta topcta">
+      <a class="btn-hero primary" href="#play">▶&nbsp; Customize the environment yourself</a>
+      <a class="btn-hero" href="#"><svg class="bicon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 0h5.5L14 4.5V15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V1a1 1 0 0 1 1-1Zm5 1.5V5h3.5L9 1.5ZM5.5 8h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1 0-1.5Zm0 3h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1 0-1.5Z"/></svg>Paper</a>
+      <a class="btn-hero" href="https://github.com/google-research/envharness" target="_blank" rel="noopener"><svg class="bicon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>Code</a>
+    </div>
+    
+
+    <div class="herofigs">
+    <div class="vpanel heropanel">
+      <div class="vtitle">SKILL LEARNING · THREE BENCHMARKS</div>
+      <div class="vchart">
+        <div class="vgroup">
+          <div class="vplot">
+            <div class="vcol a" data-h="47"><span class="vval">38.7</span><i class="vfill"></i></div>
+            <div class="vcol b" data-h="45"><span class="vval">38.5</span><i class="vfill"></i></div>
+            <div class="vcol c" data-h="76"><span class="vval">41.6</span><span class="vdelta">↑ +3.1</span><i class="vfill"></i></div>
+          </div>
+          <div class="vglab">WebArena</div>
+        </div>
+        <div class="vgroup">
+          <div class="vplot">
+            <div class="vcol a" data-h="31"><span class="vval">47.7</span><i class="vfill"></i></div>
+            <div class="vcol b" data-h="49"><span class="vval">49.9</span><i class="vfill"></i></div>
+            <div class="vcol c" data-h="72"><span class="vval">52.6</span><span class="vdelta">↑ +2.7</span><i class="vfill"></i></div>
+          </div>
+          <div class="vglab">SWE-bench Verified</div>
+        </div>
+        <div class="vgroup">
+          <div class="vplot">
+            <div class="vcol a" data-h="29"><span class="vval">61.7</span><i class="vfill"></i></div>
+            <div class="vcol b" data-h="34"><span class="vval">62.4</span><i class="vfill"></i></div>
+            <div class="vcol c" data-h="79"><span class="vval">68.3</span><span class="vdelta">↑ +5.9</span><i class="vfill"></i></div>
+          </div>
+          <div class="vglab">ALFWorld</div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="sw swa"></i>Base agent</span>
+        <span><i class="sw swb"></i>Learned in real envs</span>
+        <span><i class="sw swc"></i>Learned in EnvHarness envs</span>
+      </div>
+    </div>
+    <div class="vpanel heropanel lpanel">
+      <div class="vtitle">ENVIRONMENT SCALING · SWE-BENCH VERIFIED</div>
+      <svg class="lchart" id="lchart" role="img"
+       aria-label="Resolved rate on SWE-bench Verified against the number of training environments. EnvHarness climbs from 47.67 to 54.79, while SWE-Lite reaches 52.09 and SWE-smith 50.37."></svg>
+    </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+
+
+
+<!-- ============ 01 IDEA ============ -->
+<section class="sec" id="idea">
+  <div class="sec-head rv">
+    <span class="secno">THE IDEA</span>
+    <h2>Wrapping, not authoring</h2>
+    <p class="lead">Building environments is expensive, and once built they sit still: the same tasks, the same feedback, for every agent forever. Instead of generating new environments, <b>EnvHarness customizes existing ones</b> through the standard <code>reset()</code> / <code>step()</code> interface alone. Every customized task inherits the trusted, human-built verifier of its source benchmark. Three component types cover three kinds of control, and because each preserves the interface, they compose freely: <code>E″ = w₂(w₁(E))</code>. You’ll meet all three, as live, editable code, in the playground below.</p>
+  </div>
+
+  <div class="anal rv" aria-label="Analogy between the agent harness and EnvHarness: both scale capability through external layers while the core system stays frozen.">
+    <div class="arow ahead">
+      <div class="acell alabel"></div>
+      <div class="acell hcell hamber">AGENT HARNESS</div>
+      <div class="acell hcell hteal">ENVHARNESS<span class="ours">ours</span></div>
+    </div>
+    <div class="arow">
+      <div class="acell alabel">wraps a</div>
+      <div class="acell">frozen LLM <i class="ice2">❄</i></div>
+      <div class="acell">static environment <i class="ice2">❄</i></div>
+    </div>
+    <div class="arow">
+      <div class="acell alabel">the bottleneck</div>
+      <div class="acell">can’t act, remember, or loop</div>
+      <div class="acell">hardcoded states, rules, feedback</div>
+    </div>
+    <div class="arow">
+      <div class="acell alabel">the layers add</div>
+      <div class="acell"><b>capabilities</b>: tools, memory, skills</div>
+      <div class="acell"><b>control</b>: states, rules, observations</div>
+    </div>
+    <div class="arow">
+      <div class="acell alabel">you get</div>
+      <div class="acell">an autonomous agent</div>
+      <div class="acell">a controllable environment</div>
+    </div>
+    <div class="arow alast">
+      <div class="acell alabel">never touched</div>
+      <div class="acell"><b>the model weights</b></div>
+      <div class="acell"><b>the tasks &amp; verifiers</b></div>
+    </div>
+  </div>
+  <p class="figcap rv">Both scale by adding external layers, so the core system never changes. Same trick, other side of the loop.</p>
+
+
+</section>
+
+<!-- ============ 02 PLAYGROUND ============ -->
+<section class="sec" id="play">
+  <div class="sec-head rv">
+    <span class="secno">PLAYGROUND</span>
+    <h2>Try it in your browser</h2>
+    <p class="lead">The task is the <b>24 game</b>: combine the four cards with <code>+ − × ÷</code>, two at a time, until one number is left. Make it 24 and the episode is solved. Play a hand, then open the tabs on the right. The line under each editor says what that component customizes. Edit one, apply it to the stack, and compare the two panels on the left: what the policy observes, and what the environment actually holds.</p>
+  </div>
+
+  <div class="rv">
+<div class="boot" id="boot"><span class="sp"></span><span id="bootMsg">warming up the Python runtime…</span></div>
+    <div class="pg-grid">
+      <div class="panel">
+        <div class="phead"><h5>Toy24Env · live</h5>
+          <span class="tag"><span id="stageBadge"></span><span id="envTag">bare env</span></span></div>
+        <div class="dual">
+          <div class="view obs" id="obsView">
+            <div class="vhead">observe() <span class="badge2">what the policy sees</span></div>
+            <div class="cards" id="obsCards"></div>
+            <div class="histlist" id="obsHist"></div>
+          </div>
+          <div class="view" id="stateView">
+            <div class="vhead">get_env_state() <span class="badge2">env internals</span></div>
+            <div class="cards" id="stCards"></div>
+            <div class="histlist" id="stHist"></div>
+          </div>
+        </div>
+        <div class="pending">next action: <b id="pendTxt">combine(i=?, j=?, op=?)</b></div>
+        <div class="ops">
+          <button class="op" data-op="add">add +</button>
+          <button class="op" data-op="sub">sub −</button>
+          <button class="op" data-op="mul">mul ×</button>
+          <button class="op" data-op="div">div ÷</button>
+          <div class="spacer"></div>
+          <button class="btn" id="clearSel">clear</button>
+          <button class="btn" id="newBtn">↺ new hand</button>
+        </div>
+        <div class="warnbar" id="warnbar"></div>
+        <div class="verdict" id="verdict">Pick two cards, then an operator.</div>
+        <div class="traj">
+          <div class="traj-head"><span>trajectory</span><span class="cnt" id="trajCnt"></span></div>
+          <div id="trajList"><span class="traj-empty">no actions yet</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="phead"><h5>your component</h5><span class="tag">Python · executed by CPython</span></div>
+        <div class="tabs">
+          <button class="tab active" data-k="setup">Stage</button>
+          <button class="tab" data-k="ruleA">Contract · A</button>
+          <button class="tab" data-k="ruleT">Contract · T</button>
+          <button class="tab" data-k="ruleO">Contract · O</button>
+          <button class="tab" data-k="link">Chain</button>
+        </div>
+        <textarea class="editor" id="editor" spellcheck="false"></textarea>
+        <div class="docline" id="doc"></div>
+        <div class="toolbar">
+          <button class="btn primary" id="applyBtn" disabled>▸ Apply to stack</button>
+          <button class="btn" id="resetStackBtn">Reset stack</button>
+          <span class="status" id="status">waiting for the Python runtime…</span>
+        </div>
+        <div class="stack-view" id="stackView"><span class="empty-stack">no components applied</span></div>
+        <div class="stackexpr" id="stackExpr"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02 THE DESIGNER ============ -->
+<section class="sec" id="designer">
+  <div class="sec-head rv">
+    <span class="secno">THE DESIGNER</span>
+    <h2>The designer loop</h2>
+    <p class="lead">An LLM designer agent runs the loop below. It watches the policy interact with the environment, diagnoses a systemic flaw in the resulting trajectories, writes a component that targets it, and stacks the candidate provisionally so the same policy can be tested in the customized environment. Components that teach are kept; the rest are revised. The <code>reset()</code>/<code>step()</code> contract, the tasks and the verifiers are untouched throughout.</p>
+  </div>
+
+    <div class="stage" id="stage">
+      <div class="cyclecol">
+        <div class="cyclewrap" id="cyclewrap">
+        <div class="cyclebox" id="cyclebox" aria-label="Animated two-panel diagram after the paper's Figure 3. Left, the execution loop: a policy agent exchanges actions and observations with an environment wrapped in a stack of EnvHarness puzzle pieces. Right, the designer loop: Observe, Diagnose, Write and Validate run top to bottom, with a revise arrow from Validate back to Write. Trajectories flow from the execution loop into Observe; the written EnvHarness piece is validated on fresh rollouts and, if accepted, is appended onto the environment stack, each append makes a new environment, env prime, env double prime.">
+          <svg class="fsvg" viewBox="0 0 640 430" aria-hidden="true">
+            <defs><marker id="farr" viewBox="0 0 10 10" refX="7.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M1.5 1.5 L8 5 L1.5 8.5" fill="none" stroke-width="1.7" stroke-linecap="round" class="farrp"/></marker></defs>
+            <!-- interaction circle: agent <-> stack -->
+            <g class="exarrows" id="exArrows">
+              <path class="xa" d="M 176 138 C 196 150 196 178 176 192" marker-end="url(#farr)"/>
+              <path class="xa" d="M 130 192 C 110 180 110 152 130 138" marker-end="url(#farr)"/>
+            </g>
+            <!-- designer downward flow -->
+            <path class="da" d="M 505 106 V 138" marker-end="url(#farr)"/>
+            <path class="da" d="M 505 194 V 226" marker-end="url(#farr)"/>
+            <path class="da" d="M 505 282 V 314" marker-end="url(#farr)"/>
+            <!-- revise loop -->
+            <path class="rv" id="revPath" d="M 415 336 C 388 324 388 266 415 254" marker-end="url(#farr)"/>
+            <!-- cross arrows -->
+            <path class="ca" id="caTop" d="M 300 81 H 415" marker-end="url(#farr)"/>
+            <path class="ca amb" id="caBot" d="M 300 345 H 415" marker-end="url(#farr)"/>
+            <path class="ca" id="caMid" d="M 415 257 H 236" marker-end="url(#farr)"/>
+          </svg>
+
+          <div class="panelbox exp" id="expPanel"><span class="ptitle pt-p">EXECUTION LOOP · POLICY</span></div>
+          <div class="panelbox dsp" id="dspPanel"><span class="ptitle pt-d">ENVIRONMENT DESIGNER</span></div>
+
+          <div class="pol" id="polChip" style="left:103px;top:48px">
+            <svg viewBox="0 0 150 104" width="100" aria-hidden="true" focusable="false"><path d="M 12 8 H 118 A 10 10 0 0 1 128 18 V 30 C 128 40 141 34 141 52 C 141 70 128 64 128 74 V 86 A 10 10 0 0 1 118 96 H 12 A 10 10 0 0 1 2 86 V 18 A 10 10 0 0 1 12 8 Z"/></svg>
+            <span class="pollab">POLICY</span>
+          </div>
+          <i class="xdot xd1" id="xd1"></i><i class="xdot xd2" id="xd2"></i>
+          <div class="steps" id="stepLab">step 1</div>
+          <div class="xlab" style="left:206px;top:158px">action</div>
+          <div class="xlab" style="left:57px;top:158px;translate:-50% 0">observation</div>
+
+          <div class="stackc" id="stackc">
+            <div class="mini cp2 " id="c3" style="top:253px;left:78px;width:150px"><svg viewBox="0 0 260 74" aria-hidden="true" focusable="false"><path d="M 0 24 A 10 10 0 0 1 10 14 H 100 C 114 14 104 0 130 0 C 156 0 146 14 160 14 H 250 A 10 10 0 0 1 260 24 V 62 A 10 10 0 0 1 250 72 H 160 C 146 72 156 58 130 58 C 104 58 114 72 100 72 H 10 A 10 10 0 0 1 0 62 Z"/></svg><span class="mlab">EnvHarness</span></div>
+            <div class="mini cp2 " id="c2" style="top:286px;left:78px;width:150px"><svg viewBox="0 0 260 74" aria-hidden="true" focusable="false"><path d="M 0 24 A 10 10 0 0 1 10 14 H 100 C 114 14 104 0 130 0 C 156 0 146 14 160 14 H 250 A 10 10 0 0 1 260 24 V 62 A 10 10 0 0 1 250 72 H 160 C 146 72 156 58 130 58 C 104 58 114 72 100 72 H 10 A 10 10 0 0 1 0 62 Z"/></svg><span class="mlab">EnvHarness</span></div>
+            <div class="mini cp2 " id="c1" style="top:319px;left:78px;width:150px"><svg viewBox="0 0 260 74" aria-hidden="true" focusable="false"><path d="M 0 24 A 10 10 0 0 1 10 14 H 100 C 114 14 104 0 130 0 C 156 0 146 14 160 14 H 250 A 10 10 0 0 1 260 24 V 62 A 10 10 0 0 1 250 72 H 160 C 146 72 156 58 130 58 C 104 58 114 72 100 72 H 10 A 10 10 0 0 1 0 62 Z"/></svg><span class="mlab">EnvHarness</span></div>
+            <div class="mini cp2 envm on" id="cE" style="top:352px;left:78px;width:150px"><svg viewBox="0 0 260 74" aria-hidden="true" focusable="false"><path d="M 0 24 A 10 10 0 0 1 10 14 H 100 C 114 14 104 0 130 0 C 156 0 146 14 160 14 H 250 A 10 10 0 0 1 260 24 V 62 A 10 10 0 0 1 250 72 H 10 A 10 10 0 0 1 0 62 Z"/></svg><span class="mlab">env</span></div>
+          </div>
+          <div class="brk" id="brk"></div>
+          <div class="brklab" id="brkLab">env′</div>
+          <div class="okbadge" id="okbadge" style="position:absolute;left:153px;top:206px;translate:-50% 0;margin:0">✓ a new environment</div>
+
+          <div class="dnode" id="dn0" style="top:60px">Observe</div>
+          <div class="dnode" id="dn1" style="top:148px">Diagnose</div>
+          <div class="dnode" id="dn2" style="top:236px">Write</div>
+          <div class="dnode" id="dn3" style="top:324px">Validate<i class="scanbar2"></i></div>
+          <div class="revlab" id="revLab">revise ↻</div>
+
+          <div class="alab" style="left:339px;top:44px">trajectories</div>
+          <div class="alab amb2" style="left:339px;top:358px">fresh rollouts</div>
+          <div class="alab" style="left:339px;top:220px">appends<br>EnvHarness</div>
+
+          <div class="tauchip" id="tauA" style="left:214px;top:66px">τ · trajectories</div>
+          <div class="tauchip amb3" id="tauB" style="left:214px;top:330px">τ′ · fresh</div>
+          <div class="mini cp2 traveler" id="traveler" style="width:130px"><svg viewBox="0 0 260 74" aria-hidden="true" focusable="false"><path d="M 0 24 A 10 10 0 0 1 10 14 H 100 C 114 14 104 0 130 0 C 156 0 146 14 160 14 H 250 A 10 10 0 0 1 260 24 V 62 A 10 10 0 0 1 250 72 H 160 C 146 72 156 58 130 58 C 104 58 114 72 100 72 H 10 A 10 10 0 0 1 0 62 Z"/></svg><span class="mlab">EnvHarness</span><span class="vres" id="vres"></span></div>
+        </div>
+        </div>
+        <div class="ctrlbar" id="ctrlbar">
+          <button class="cbtn" id="playBtn" aria-label="pause">⏸</button>
+          <button class="cbtn" id="rstBtn" aria-label="restart">↻</button>
+        </div>
+        <div class="legendrow"><span><i class="lg lp"></i>policy agent</span><span><i class="lg ld"></i>environment designer</span><span><i class="lg le"></i>environment</span></div>
+      </div>
+
+      <div class="casecard" id="casecard">
+        <div class="casetabs">
+          <button class="ctab on" data-ph="0" data-o="p">Interact</button>
+          <button class="ctab" data-ph="1" data-o="d">Diagnose</button>
+          <button class="ctab" data-ph="2" data-o="d">Write</button>
+          <button class="ctab" data-ph="3" data-o="d">Validate</button>
+        </div>
+        <div class="casebody">
+          <div class="pane on" id="pn0">
+            <div class="whorow"><span class="who wp">POLICY AGENT</span></div>
+            <h6>It interacts with the environment</h6>
+            <pre class="clog">$ edit sklearn/impute.py
+$ git commit -m "fix SimpleImputer"
+→ submit patch            <span class="cmt"># tests never run</span>
+<span class="bad">✗ FAIL: hidden test breaks</span></pre>
+            <p class="cnote">Rollouts come back as trajectories τ, successes and failures alike.</p>
+          </div>
+          <div class="pane" id="pn1">
+            <div class="whorow"><span class="who wd">ENVIRONMENT DESIGNER</span></div>
+            <h6>It reads τ and names the flaw</h6>
+            <blockquote class="cquote">“Systemic weakness: the agent submits patches <b>without running the failing test first</b>. Success depends on luck, not verification.”</blockquote>
+            <p class="cnote">Diagnosis targets the pattern, not one bad episode.</p>
+          </div>
+          <div class="pane" id="pn2">
+            <div class="whorow"><span class="who wd">ENVIRONMENT DESIGNER</span></div>
+            <h6>It writes an EnvHarness component</h6>
+            <pre class="clog"><span class="kw2">class</span> <span class="fn2">_Contract</span>(Contract):
+    <span class="kw2">def</span> <span class="fn2">modify_transition</span>(self, action, response, env_state):
+        cmd = bash_command(action)
+        <span class="kw2">if</span> <span class="st2">"pytest"</span> <span class="kw2">in</span> cmd:
+            env_state.extras[<span class="st2">"ran_tests"</span>] = <span class="kw2">True</span>
+        <span class="kw2">if</span> is_submission(cmd) <span class="kw2">and not</span> env_state.extras.get(<span class="st2">"ran_tests"</span>):
+            <span class="kw2">return</span> failed(response,
+                <span class="st2">"pre-commit hook failed: run the test suite before submitting."</span>)
+        <span class="kw2">return</span> response</pre>
+            <p class="cnote">A plug-in layer over the frozen env, with tasks and verifiers untouched.</p>
+          </div>
+          <div class="pane" id="pn3">
+            <div class="whorow"><span class="who wd">ENVIRONMENT DESIGNER</span><span class="who wp2">rollouts run by POLICY</span></div>
+            <h6>It validates the piece on fresh rollouts</h6>
+            <pre class="clog">rollout 3/8 · submit → <span class="warn2">blocked: "run the test suite…"</span>
+rollout 3/8 · $ pytest tests/ … 1 failed
+rollout 3/8 · fix → pytest ✓ → submit ✓</pre>
+            <p class="cnote verdictline" id="verdictline">verdict: <b class="okc">teaches verification → ACCEPT</b></p>
+          </div>
+          <div class="pane" id="pn4">
+            <div class="whorow"><span class="who wd">ENVIRONMENT DESIGNER</span></div>
+            <h6>Click. A new environment.</h6>
+            <div class="bigexpr" id="bigexpr">env′ = EnvHarness(env)</div>
+            <p class="cnote">Same interface, new lessons. The policy trains on it, and the cycle turns again.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+</section>
+
+
+
+
+<!-- ============ 03 RESULTS ============ -->
+<section class="sec" id="results">
+  <div class="sec-head rv">
+    <h2>Results</h2>
+    <p class="lead">The pattern above holds across policy models. Skills mined in EnvHarness environments beat both baselines for every model we tested, on the same held-out tasks and with the same verifiers.</p>
+  </div>
+
+  <div class="rv" id="resFig">
+    <div class="vpanel">
+      <div class="vtitle">EVERY POLICY MODEL IT’S APPLIED TO · SWE-BENCH VERIFIED</div>
+      <div class="vchart vchart4">
+        <div class="vgroup">
+          <div class="vplot">
+            <div class="vcol a" data-h="25"><span class="vval">30.7</span><i class="vfill"></i></div>
+            <div class="vcol b" data-h="65"><span class="vval">36.8</span><i class="vfill"></i></div>
+            <div class="vcol c" data-h="87"><span class="vval">40.0</span><span class="vdelta">↑ +3.2</span><i class="vfill"></i></div>
+          </div>
+          <div class="vglab">Gemini 3.1 Flash-Lite</div>
+        </div>
+        <div class="vgroup">
+          <div class="vplot">
+            <div class="vcol a" data-h="24"><span class="vval">41.0</span><i class="vfill"></i></div>
+            <div class="vcol b" data-h="67"><span class="vval">48.4</span><i class="vfill"></i></div>
+            <div class="vcol c" data-h="89"><span class="vval">52.1</span><span class="vdelta">↑ +3.7</span><i class="vfill"></i></div>
+          </div>
+          <div class="vglab">Qwen3.6 27B</div>
+        </div>
+        <div class="vgroup">
+          <div class="vplot">
+            <div class="vcol a" data-h="35"><span class="vval">47.8</span><i class="vfill"></i></div>
+            <div class="vcol b" data-h="53"><span class="vval">49.8</span><i class="vfill"></i></div>
+            <div class="vcol c" data-h="79"><span class="vval">52.7</span><span class="vdelta">↑ +2.9</span><i class="vfill"></i></div>
+          </div>
+          <div class="vglab">Gemini 3.5 Flash</div>
+        </div>
+        <div class="vgroup">
+          <div class="vplot">
+            <div class="vcol a" data-h="38"><span class="vval">67.2</span><i class="vfill"></i></div>
+            <div class="vcol b" data-h="56"><span class="vval">69.2</span><i class="vfill"></i></div>
+            <div class="vcol c" data-h="85"><span class="vval">72.4</span><span class="vdelta">↑ +3.2</span><i class="vfill"></i></div>
+          </div>
+          <div class="vglab">Claude Sonnet 4.6</div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="sw swa"></i>Base agent</span>
+        <span><i class="sw swb"></i>Learned in real envs</span>
+        <span><i class="sw swc"></i>Learned in EnvHarness envs</span>
+      </div>
+      <p class="figcap" style="margin-top:18px">The gain over original-env skills stays nearly constant, 2.9 to 3.7 points, while the no-skill baselines span 30.7 to 67.2. The designer shares the policy model in every setting.</p>
+    </div>
+  </div>
+
+  <div class="morep rv">
+    <h4>Also in the paper</h4>
+    <div class="mrow">
+      <div class="mitem"><b>6% → 80%</b><span>environments on demand: steering a benchmark’s success rate into a requested band [0.4, 0.6]</span></div>
+      <div class="mitem"><b>88.3% vs 85.4%</b><span>RL on EnvHarness environments beats RL on the originals (ALFWorld)</span></div>
+      <div class="mitem"><b>47.7 → 54.8</b><span>three rounds of policy–environment co-evolution on SWE-bench Verified</span></div>
+    </div>
+    <p class="mfoot">Plus nine targeted-weakness case studies across three benchmarks, and the full formalism for why components compose.</p>
+  </div>
+</section>
+
+<!-- ============ 05 TAKEAWAY ============ -->
+<section class="sec" id="takeaway">
+  <div class="sec-head rv">
+    <h2>Discussion</h2>
+    <p class="lead">Work on self-evolving agents has agents rewriting their prompts, growing skill libraries and editing their own scaffolds. In nearly all of it, the world the agent evolves against stays fixed.</p>
+  </div>
+  <div class="take rv">
+    <p>An agent that keeps improving against a frozen benchmark eventually stops learning from it. The start states, the rules and the feedback are the same for every learner at every stage, so once the agent can solve the tasks, the environment has nothing further to teach. The missing piece is not a better agent but control over the environment it learns in.</p>
+    <p>EnvHarness supplies that half the way the agent harness did for the model: a frozen core that external layers make capable. Every component preserves the <code>reset()</code>/<code>step()</code> contract and inherits the benchmark’s human-built verifiers, so reshaping is cheap, trustworthy, and composable. An LLM designer does it automatically, against the specific policy being trained.</p>
+    <p>The result is a loop that evolves on <b>both sides of the interface</b>: the environment targets the learner’s current weaknesses, serves difficulty on demand, and co-evolves round after round as the policy improves, climbing 47.7 to 54.8 on SWE-bench over three rounds. We ship three component types; the interface admits many more.</p>
+  </div>
+</section>
+
+
+
+<!-- ============ CITE ============ -->
+<section class="sec" id="cite">
+  <div class="sec-head rv">
+    <span class="secno">CITE</span>
+    <h2>Cite this work</h2>
+  </div>
+  <div class="bib rv">
+    <button class="btn copy-bib" id="copyBib">Copy</button>
+<pre id="bibText">@inproceedings{envharness2026,
+  title     = {EnvHarness: Awakening Static Worlds for Agent Learning},
+  author    = {Anonymous Authors},
+  booktitle = {Under review},
+  year      = {2026},
+}</pre>
+  </div>
+</section>
+
+<!-- ============ RUN IT YOURSELF ============ -->
+<section class="sec runsec" id="run">
+  <div class="rv">
+    <h2>Code</h2>
+    <p class="lead">The full framework is open source. The repository contains the <code>ActionableEnv</code> contract, the per-benchmark Bridges, the three component types, and the designer agent, with presets for every benchmark on this page. The README covers setup and how to reproduce each figure.</p>
+    <div class="cta runcta">
+      <a class="btn-hero" href="https://github.com/google-research/envharness" target="_blank" rel="noopener"><svg class="bicon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>Code</a>
+    </div>
+  </div>
+</section>
+
+
+
+
+<script type="text/x-python" id="ehcore">
+"""A browser-sized mirror of envharness.core, faithful to the real ABCs.
+
+Only what the playground needs: the core types, the ActionableEnv /
+EnvHarness contracts, the three shipped harnesses (Stage / Contract / Chain),
+and Toy24Env. Method signatures and the A/T/O step order match the real
+package so component code written here runs there unchanged.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+
+# ======================================================================
+# envharness.core.types
+# ======================================================================
+
+@dataclass
+class Action:
+    name: str
+    kwargs: dict = field(default_factory=dict)
+
+
+@dataclass
+class Blocked:
+    reason: str
+
+
+@dataclass
+class Observation:
+    text: str = ""
+    data: dict = field(default_factory=dict)
+
+
+@dataclass
+class EnvResponse:
+    observation: Observation
+    reward: float = 0.0
+    terminated: bool = False
+    truncated: bool = False
+    info: dict = field(default_factory=dict)
+
+
+@dataclass
+class EnvResetResponse:
+    observation: Observation
+    info: dict = field(default_factory=dict)
+
+
+@dataclass
+class EvaluationResult:
+    success: bool = False
+    score: float = 0.0
+    metrics: dict = field(default_factory=dict)
+
+
+@dataclass
+class StepInfo:
+    action: Action | None = None
+    response: EnvResponse | None = None
+
+
+# ======================================================================
+# envharness.core.actionable_env
+# ======================================================================
+
+class ActionableEnv:
+    """The contract every environment and every harness satisfies."""
+
+    def reset(self, seed: int | None = None,
+              options: dict[str, Any] | None = None) -> EnvResetResponse:
+        raise NotImplementedError
+
+    def step(self, action: Action) -> EnvResponse:
+        raise NotImplementedError
+
+    def observe(self) -> Observation:
+        raise NotImplementedError
+
+    def evaluate(self) -> EvaluationResult:
+        raise NotImplementedError
+
+    def get_env_state(self) -> Any:
+        raise NotImplementedError
+
+    def step_reward(self, step_info: StepInfo) -> float:
+        return 0.0
+
+    def notify_replay_complete(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+
+# ======================================================================
+# envharness.core.envharness
+# ======================================================================
+
+class EnvHarness(ActionableEnv):
+    """Wraps an inner ActionableEnv and delegates everything by default."""
+
+    def __init__(self, inner: ActionableEnv | None = None) -> None:
+        self._inner = inner
+
+    @property
+    def inner(self) -> ActionableEnv:
+        if self._inner is None:
+            raise RuntimeError(f"{type(self).__name__} has no inner env bound.")
+        return self._inner
+
+    def reset(self, seed=None, options=None):
+        return self.inner.reset(seed, options)
+
+    def step(self, action):
+        return self.inner.step(action)
+
+    def observe(self):
+        return self.inner.observe()
+
+    def evaluate(self):
+        return self.inner.evaluate()
+
+    def get_env_state(self):
+        return self.inner.get_env_state()
+
+    def step_reward(self, step_info):
+        return self.inner.step_reward(step_info)
+
+    def notify_replay_complete(self):
+        return self.inner.notify_replay_complete()
+
+    def close(self):
+        if self._inner is not None:
+            self._inner.close()
+        self._inner = None
+
+
+# ======================================================================
+# Stage  -- the S0 harness: replay actions on reset
+# ======================================================================
+
+class Stage(EnvHarness):
+    def __init__(self, inner: ActionableEnv | None = None,
+                 actions: list[Action] | None = None) -> None:
+        super().__init__(inner)
+        self.actions: list[Action] = list(actions or [])
+
+    def reset(self, seed=None, options=None):
+        reset_resp = self.inner.reset(seed, options)
+        for a in self.actions:
+            self.inner.step(a)
+        if self.actions:
+            self.inner.notify_replay_complete()
+        return EnvResetResponse(
+            observation=self.inner.observe(),
+            info=dict(reset_resp.info),
+        )
+
+    def append(self, action: Action) -> None:
+        self.actions.append(action)
+
+    def save_state(self) -> dict:
+        return {"actions": [{"name": a.name, "kwargs": dict(a.kwargs)}
+                            for a in self.actions]}
+
+
+# ======================================================================
+# Contract  -- the A / T / O harness
+# ======================================================================
+
+class Contract(EnvHarness):
+    rules_code: str = ""
+
+    # ---- hooks: defaults are pass-through, subclasses override ----
+
+    def filter_action(self, action: Action, env_state: Any) -> Action | Blocked:
+        """A: transform or reject the action before inner.step."""
+        return action
+
+    def modify_transition(self, action: Action, raw_response: EnvResponse,
+                          env_state: Any) -> EnvResponse:
+        """T: transform inner.step's EnvResponse before the O hook."""
+        return raw_response
+
+    def filter_observation(self, obs: Observation, env_state: Any) -> Observation:
+        """O: transform the Observation the agent sees."""
+        return obs
+
+    # ---- the A/T/O step loop ----
+
+    def reset(self, seed=None, options=None):
+        reset_resp = self.inner.reset(seed, options)
+        env_state = self.inner.get_env_state()
+        fresh = self.inner.observe()
+        return EnvResetResponse(
+            observation=self.filter_observation(fresh, env_state),
+            info=dict(reset_resp.info),
+        )
+
+    def step(self, action: Action) -> EnvResponse:
+        env_state = self.inner.get_env_state()
+        filtered = self.filter_action(action, env_state)
+        if isinstance(filtered, Blocked):
+            fresh = self.filter_observation(self.inner.observe(), env_state)
+            return EnvResponse(
+                observation=Observation(
+                    text=f"[blocked] {filtered.reason}\n\n{fresh.text}",
+                    data={**(fresh.data or {}),
+                          "blocked": True,
+                          "blocked_reason": filtered.reason},
+                ),
+                reward=0.0, terminated=False, truncated=False,
+                info={"blocked_reason": filtered.reason},
+            )
+        raw_response = self.inner.step(filtered)
+        post_state = self.inner.get_env_state()
+        transformed = self.modify_transition(filtered, raw_response, post_state)
+        new_obs = self.filter_observation(transformed.observation, post_state)
+        return EnvResponse(
+            observation=new_obs,
+            reward=transformed.reward,
+            terminated=transformed.terminated,
+            truncated=transformed.truncated,
+            info=transformed.info,
+        )
+
+    def observe(self) -> Observation:
+        env_state = self.inner.get_env_state()
+        return self.filter_observation(self.inner.observe(), env_state)
+
+    def save_state(self) -> dict:
+        return {"rules_code": self.rules_code or ""}
+
+
+# ======================================================================
+# Chain  -- serial composition of two envs
+# ======================================================================
+
+class Chain(EnvHarness):
+    def __init__(self, env_a=None, env_b=None, *, carry_context=True,
+                 a_done_via="terminated", carry_chars=1500):
+        super().__init__(env_a)
+        self._env_b = env_b
+        self._carry_context = bool(carry_context)
+        self._a_done_via = a_done_via
+        self._carry_chars = int(carry_chars)
+        self._stage = "A"
+        self._a_success = False
+        self._last_obs_a: Observation | None = None
+
+    @property
+    def env_a(self):
+        return self.inner
+
+    @property
+    def env_b(self):
+        if self._env_b is None:
+            raise RuntimeError("Chain has no env_b bound.")
+        return self._env_b
+
+    @property
+    def stage(self):
+        return self._stage
+
+    def reset(self, seed=None, options=None):
+        self._stage = "A"
+        self._a_success = False
+        self._last_obs_a = None
+        r = self.env_a.reset(seed, options)
+        self._last_obs_a = r.observation
+        return EnvResetResponse(observation=r.observation,
+                                info={**dict(r.info), "link_stage": "A"})
+
+    def step(self, action):
+        if self._stage == "A":
+            return self._step_a(action)
+        return self._step_b(action)
+
+    def _a_is_finished(self, resp):
+        if resp.terminated or resp.truncated:
+            return True
+        if self._a_done_via == "submitted":
+            return bool((resp.info or {}).get("submitted"))
+        return False
+
+    def _step_a(self, action):
+        resp = self.env_a.step(action)
+        self._last_obs_a = resp.observation
+        if not self._a_is_finished(resp):
+            return EnvResponse(observation=resp.observation, reward=resp.reward,
+                               terminated=False, truncated=False,
+                               info={**dict(resp.info), "link_stage": "A"})
+        try:
+            self._a_success = bool(self.env_a.evaluate().success)
+        except Exception:
+            self._a_success = False
+        r_b = self.env_b.reset(None, None)
+        first_obs_b = r_b.observation
+        if self._carry_context:
+            first_obs_b = self._splice_handoff(self._last_obs_a, first_obs_b)
+        self._stage = "B"
+        return EnvResponse(observation=first_obs_b, reward=0.0,
+                           terminated=False, truncated=False,
+                           info={"link_stage": "switched_to_B",
+                                 "a_success": self._a_success})
+
+    def _step_b(self, action):
+        resp = self.env_b.step(action)
+        if not (resp.terminated or resp.truncated):
+            return EnvResponse(observation=resp.observation, reward=resp.reward,
+                               terminated=False, truncated=False,
+                               info={**dict(resp.info), "link_stage": "B"})
+        try:
+            b_success = bool(self.env_b.evaluate().success)
+        except Exception:
+            b_success = False
+        combined = self._a_success and b_success
+        return EnvResponse(observation=resp.observation, reward=float(combined),
+                           terminated=True, truncated=resp.truncated,
+                           info={**dict(resp.info), "link_stage": "done",
+                                 "a_success": self._a_success,
+                                 "b_success": b_success,
+                                 "combined_success": combined})
+
+    def observe(self):
+        active = self.env_a if self._stage == "A" else self.env_b
+        return active.observe()
+
+    def get_env_state(self):
+        active = self.env_a if self._stage == "A" else self.env_b
+        return active.get_env_state()
+
+    def evaluate(self):
+        try:
+            a_ok = self._a_success if self._stage != "A" else self.env_a.evaluate().success
+        except Exception:
+            a_ok = False
+        try:
+            b_ok = self.env_b.evaluate().success if self._stage == "B" else False
+        except Exception:
+            b_ok = False
+        return EvaluationResult(success=bool(a_ok and b_ok),
+                                score=(float(a_ok) + float(b_ok)) / 2.0,
+                                metrics={"a_success": a_ok, "b_success": b_ok,
+                                         "link_stage": self._stage})
+
+    def _splice_handoff(self, last_obs_a, first_obs_b):
+        banner = ("[Chain: SWITCHED TO A NEW TASK. The previous task is over. "
+                  "Re-orient before acting.]\n[Begin new task B]\n")
+        new_data = dict(first_obs_b.data or {})
+        new_data["linked_from_a"] = True
+        return Observation(text=banner + (first_obs_b.text or ""), data=new_data)
+
+
+# ======================================================================
+# Toy24Env  -- the 24 game as an ActionableEnv
+# ======================================================================
+
+OP_SYMBOL = {"add": "+", "sub": "-", "mul": "*", "div": "/"}
+
+
+class Toy24Env(ActionableEnv):
+    """Combine two numbers at a time until one number is left.
+
+    Action: combine(i, j, op) with i, j indices into the current pool and
+    op in {add, sub, mul, div}.
+    """
+
+    def __init__(self, cards=(4, 6, 6, 8), target: float = 24.0) -> None:
+        self._start = [float(c) for c in cards]
+        self._target = float(target)
+        self._s: dict | None = None
+
+    # ---- contract ----
+
+    def reset(self, seed=None, options=None):
+        cards = list(self._start)
+        if options and "cards" in options:
+            cards = [float(c) for c in options["cards"]]
+        self._s = {"cards": cards, "history": [], "steps": 0,
+                   "won": False, "last_error": None}
+        return EnvResetResponse(observation=self.observe(), info={"target": self._target})
+
+    def step(self, action: Action) -> EnvResponse:
+        s = self._s
+        if s is None:
+            self.reset()
+            s = self._s
+        s["last_error"] = None
+
+        if action.name != "combine":
+            s["last_error"] = f"unknown action {action.name!r}"
+            return EnvResponse(observation=self.observe(), reward=0.0,
+                               terminated=False, truncated=False,
+                               info={"error": s["last_error"]})
+
+        i = action.kwargs.get("i")
+        j = action.kwargs.get("j")
+        op = action.kwargs.get("op")
+        n = len(s["cards"])
+        if not isinstance(i, int) or not isinstance(j, int) or i == j \
+                or not (0 <= i < n) or not (0 <= j < n):
+            s["last_error"] = "bad indices"
+            return EnvResponse(observation=self.observe(), reward=0.0,
+                               terminated=False, truncated=False,
+                               info={"error": s["last_error"]})
+        if op not in OP_SYMBOL:
+            s["last_error"] = f"unknown op {op!r}"
+            return EnvResponse(observation=self.observe(), reward=0.0,
+                               terminated=False, truncated=False,
+                               info={"error": s["last_error"]})
+
+        a, b = s["cards"][i], s["cards"][j]
+        if op == "add":
+            v = a + b
+        elif op == "sub":
+            v = a - b
+        elif op == "mul":
+            v = a * b
+        else:
+            if abs(b) < 1e-9:
+                s["last_error"] = "division by zero"
+                return EnvResponse(observation=self.observe(), reward=0.0,
+                                   terminated=False, truncated=False,
+                                   info={"error": s["last_error"]})
+            v = a / b
+
+        s["steps"] += 1
+        s["history"].append(f"{_num(a)} {OP_SYMBOL[op]} {_num(b)} = {_num(v)}")
+        rest = [c for k, c in enumerate(s["cards"]) if k not in (i, j)]
+        s["cards"] = rest + [v]
+
+        terminated = len(s["cards"]) == 1
+        won = terminated and abs(s["cards"][0] - self._target) < 1e-6
+        s["won"] = won
+        return EnvResponse(observation=self.observe(), reward=float(won),
+                           terminated=terminated, truncated=False,
+                           info={"won": won, "steps": s["steps"]})
+
+    def observe(self) -> Observation:
+        s = self._s
+        if s is None:
+            self.reset()
+            s = self._s
+        pool = ", ".join(_num(c) for c in s["cards"])
+        lines = [f"pool: {pool}", f"target: {_num(self._target)}"]
+        if s["history"]:
+            lines.append("history: " + " ; ".join(s["history"]))
+        if s["last_error"]:
+            lines.append(f"error: {s['last_error']}")
+        return Observation(
+            text="\n".join(lines),
+            data={"cards": list(s["cards"]), "history": list(s["history"]),
+                  "target": self._target, "won": s["won"]},
+        )
+
+    def evaluate(self) -> EvaluationResult:
+        s = self._s or {"cards": [], "won": False, "steps": 0}
+        won = bool(s.get("won"))
+        return EvaluationResult(success=won, score=float(won),
+                                metrics={"steps": s.get("steps", 0),
+                                         "cards_left": len(s.get("cards", []))})
+
+    def get_env_state(self):
+        return self._s
+
+    def notify_replay_complete(self):
+        if self._s is not None:
+            self._s["steps"] = 0
+
+
+def num(x: float) -> str:
+    """Render a pool value the way the environment prints it."""
+    r = round(float(x), 4)
+    return str(int(r)) if abs(r - int(r)) < 1e-9 else str(r)
+
+
+_num = num  # internal alias
+
+# ======================================================================
+# playground bridge
+# ======================================================================
+import json as _json
+
+START = [4, 6, 6, 8]
+STACK = []          # list of {"code": str, "label": str} -- source, like save_state
+ENV = None
+LOG = []
+WARN = ""           # surfaced composition problems, e.g. a swallowed Stage replay
+
+HANDS = [[4, 6, 6, 8], [3, 3, 8, 8], [1, 5, 5, 5], [2, 3, 5, 12],
+         [4, 4, 7, 7], [3, 4, 6, 8], [6, 6, 6, 6]]
+
+
+def _compile(code):
+    # Mirror code_loader: exec the source, work out which component it is.
+    ns = dict(globals())
+    exec(code, ns)
+    for k, v in ns.items():
+        if isinstance(v, type) and issubclass(v, Contract) and v is not Contract:
+            return ("rules", v)
+    if isinstance(ns.get("env_b"), ActionableEnv):
+        return ("link", (ns["env_b"], dict(ns.get("chain_kwargs") or {})))
+    if isinstance(ns.get("actions"), list):
+        return ("setup", ns["actions"])
+    raise ValueError("found no Contract subclass, no `env_b`, and no `actions` list")
+
+
+def rebuild():
+    global ENV, WARN
+    env = Toy24Env(START)
+    replayed = 0
+    for c in STACK:
+        kind, payload = _compile(c["code"])     # fresh objects on every rebuild
+        if kind == "rules":
+            env = payload(inner=env)
+        elif kind == "setup":
+            env = Stage(inner=env, actions=payload)
+            replayed += len(payload)
+        else:
+            env_b, kw = payload
+            env = Chain(env_a=env, env_b=env_b, **kw)
+    ENV = env
+    ENV.reset()
+    LOG.clear()
+
+    # Stage replays through inner.step(), so a Rule underneath it also filters
+    # the Stage's own actions. That is a real semantic difference between the
+    # two orderings rather than a fault, so report what happened and leave the
+    # choice to the reader. Each replayed combine that lands appends exactly
+    # one history entry, which makes the shortfall exact.
+    landed = len((ENV.get_env_state() or {}).get("history", []))
+    if replayed and landed < replayed:
+        WARN = ("Ordering note: the Stage replayed %d action(s) and %d reached "
+                "the environment, because the Rule below it filters the replay "
+                "too. Stage(Contract(env)) requires the staged state to be "
+                "reachable under the contract; Contract(Stage(env)) stages first and "
+                "applies the rules only to your own play."
+                % (replayed, landed))
+    else:
+        WARN = ""
+
+
+def set_hand(idx):
+    global START
+    START = list(HANDS[int(idx) % len(HANDS)])
+    rebuild()
+
+
+def apply_code(code, label):
+    _compile(code)                  # validate before touching the live stack
+    STACK.append({"code": code, "label": label})
+    rebuild()
+    return "ok"
+
+
+def drop(i):
+    del STACK[int(i)]
+    rebuild()
+
+
+def clear_stack():
+    STACK.clear()
+    rebuild()
+
+
+def do_step(i, j, op):
+    a = Action(name="combine", kwargs={"i": int(i), "j": int(j), "op": op})
+    resp = ENV.step(a)
+    info = resp.info or {}
+    blocked = "blocked_reason" in info
+    entry = {
+        "action": 'combine(i=%d, j=%d, op="%s")' % (int(i), int(j), op),
+        "blocked": blocked,
+        "note": info.get("blocked_reason") or info.get("error") or "",
+        "reward": float(resp.reward or 0.0),
+        "terminated": bool(resp.terminated),
+        "switch": False,
+    }
+    if info.get("link_stage") == "switched_to_B":
+        entry["note"] = "Chain: task A finished (success=%s), now on task B" % (
+            info.get("a_success"))
+        entry["switch"] = True
+    LOG.append(entry)
+    return ui_state()
+
+
+def _stage():
+    e = ENV
+    while isinstance(e, EnvHarness):
+        if isinstance(e, Chain):
+            return e.stage
+        e = e._inner
+        if e is None:
+            break
+    return None
+
+
+def ui_state():
+    obs = ENV.observe()
+    d = obs.data or {}
+    # get_env_state() is never touched by the O hook, so it is the truth
+    # channel: every harness delegates it straight down to the live env.
+    truth = ENV.get_env_state() or {"cards": [], "history": []}
+    cards = [float(c) for c in d.get("cards", [])]
+    shown = d.get("masked") or [num(c) for c in cards]
+    ev = ENV.evaluate()
+    last = LOG[-1] if LOG else None
+    return _json.dumps({
+        "obs_shown": list(shown),
+        "obs_text": obs.text,
+        "true_cards": [num(c) for c in truth.get("cards", [])],
+        "true_history": list(truth.get("history", [])),
+        "blocked": bool(last and last.get("blocked")),
+        "blocked_reason": (last.get("note") if last and last.get("blocked") else ""),
+        "last_op": (last.get("action", "") if last else ""),
+        "won": bool(ev.success),
+        "terminated": bool(last and last.get("terminated")),
+        "stage": _stage(),
+        "log": list(LOG),
+        "stack": [c["label"] for c in STACK],
+        "warn": WARN,
+    })
+
+
+rebuild()
+
+</script>
+<script type="text/plain" id="tpl-setup">
+actions = [
+    Action(name="combine", kwargs={"i": 1, "j": 3, "op": "mul"}),
+]
+
+</script>
+<script type="text/plain" id="tpl-ruleA">
+class _Rules(Contract):
+    def filter_action(self, action, env_state):
+        if action.name == "combine" and action.kwargs.get("op") == "mul":
+            return Blocked(reason="multiplication disabled")
+        return action
+</script>
+<script type="text/plain" id="tpl-ruleT">
+class _Rules(Contract):
+    def modify_transition(self, action, raw_response, env_state):
+        if action.kwargs.get("op") == "div":
+            cards = env_state["cards"]
+            cards[-1] = float(int(cards[-1]))
+            raw_response.info = {**raw_response.info,
+                                 "note": "division truncated"}
+        return raw_response
+
+</script>
+<script type="text/plain" id="tpl-ruleO">
+class _Rules(Contract):
+    def filter_observation(self, obs, env_state):
+        cards = list(obs.data.get("cards", []))
+        if not cards:
+            return obs
+        shown = list(obs.data.get("masked") or [num(c) for c in cards])
+        biggest = max(cards)
+        shown = ["?" if c == biggest else s
+                 for c, s in zip(cards, shown)]
+        data = dict(obs.data)
+        data["masked"] = shown
+        return Observation(text="pool: " + ", ".join(shown), data=data)
+
+</script>
+<script type="text/plain" id="tpl-link">
+env_b = Toy24Env([2, 3, 5, 12])
+chain_kwargs = {"a_done_via": "terminated", "carry_context": True}
+
+</script>
+
+<script type="module">
+const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v314.0.3/full/";
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- THEME ---------- */
+const root=document.documentElement, tbtn=document.getElementById('themeBtn');
+try{const saved=localStorage.getItem('eh-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':null); if(saved) root.setAttribute('data-theme',saved);}catch(e){}
+function syncT(){tbtn.textContent=root.getAttribute('data-theme')==='light'?'Dark':'Light';}
+syncT();
+function flipTheme(){const t=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',t);try{localStorage.setItem('eh-theme',t);}catch(e){}syncT();}
+tbtn.onclick=(e)=>{
+  if(!document.startViewTransition||REDUCED){flipTheme();return;}
+  const x=e.clientX,y=e.clientY,r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+  const vt=document.startViewTransition(flipTheme);
+  vt.ready.then(()=>{document.documentElement.animate(
+    {clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${r}px at ${x}px ${y}px)`]},
+    {duration:520,easing:'ease-in',pseudoElement:'::view-transition-new(root)'});});
+};
+
+
+/* ---------- HUD ---------- */
+const hud=document.getElementById('hud');
+addEventListener('scroll',()=>hud.classList.toggle('scrolled',scrollY>24),{passive:true});
+
+
+
+/* ---------- HERO: fig3 execution + designer loops ---------- */
+const stage=document.getElementById('stage');
+const cyclewrap=document.getElementById('cyclewrap'), cyclebox=document.getElementById('cyclebox');
+function fitStage(){const w=cyclewrap.clientWidth,s=Math.min(1,w/640);
+  cyclebox.style.transform=`scale(${s})`;cyclewrap.style.height=(430*s)+'px';}
+fitStage();addEventListener('resize',fitStage);
+(()=>{
+  const $=id=>document.getElementById(id);
+  const dn=[$('dn0'),$('dn1'),$('dn2'),$('dn3')];
+  const stack=[$('c1'),$('c2'),$('c3')], cE=$('cE'), stackc=$('stackc');
+  const badge=$('okbadge'), trav=$('traveler'), vres=$('vres');
+  const brk=$('brk'), brkLab=$('brkLab');
+  const tauA=$('tauA'), tauB=$('tauB'), pol=$('polChip'), ex=$('exArrows');
+  const caTop=$('caTop'), caBot=$('caBot'), caMid=$('caMid');
+  const revP=$('revPath'), revL=$('revLab');
+  const panes=[$('pn0'),$('pn1'),$('pn2'),$('pn3'),$('pn4')];
+  const tabs=[...document.querySelectorAll('.ctab')];
+  const verdictline=$('verdictline'), bigexpr=$('bigexpr');
+  const PRIMES=['env\u2032','env\u2033','env\u2034'];
+  const EXPRS=['env\u2032 = EnvHarness(env)',
+               'env\u2033 = EnvHarness(EnvHarness(env))',
+               'env\u2034 = EnvHarness(EnvHarness(EnvHarness(env)))'];
+  const SLOT=[319,286,253];
+  const PC_W=[252,240], PC_V=[252,326];
+  let catchup=false;
+  function popBadge(){badge.classList.remove('pop');void badge.offsetWidth;badge.classList.add('pop');}
+  function litD(i){dn.forEach((n,k)=>n.classList.toggle('on',k===i));}
+  function pane(i){panes.forEach((p,k)=>p.classList.toggle('on',k===i));
+    tabs.forEach((tb,k)=>tb.classList.toggle('on',k===Math.min(i,3)));}
+  function mv(x,y,dur){const d=catchup?0:dur;
+    trav.style.transition=`left ${d}ms cubic-bezier(.45,.05,.4,1), top ${d}ms cubic-bezier(.45,.05,.4,1)`;
+    trav.style.left=x+'px';trav.style.top=y+'px';}
+  function spawnAt(x,y){trav.style.transition='none';trav.style.left=x+'px';trav.style.top=y+'px';
+    void trav.offsetWidth;trav.classList.add('show');}
+  function tauTo(el,x,y,dur){el.style.transition=catchup?'none':
+    `left ${dur}ms cubic-bezier(.45,.05,.4,1), top ${Math.min(dur,550)}ms cubic-bezier(.45,.05,.4,1), opacity .3s`;
+    el.style.left=x+'px';if(y!=null)el.style.top=y+'px';}
+  function tauSpawn(el,x,y){el.style.transition='none';el.style.left=x+'px';el.style.top=y+'px';
+    void el.offsetWidth;el.style.transition='';el.classList.add('show');}
+  function tauReset(el,x,y){el.classList.remove('show');el.style.transition='none';
+    el.style.left=x+'px';if(y!=null)el.style.top=y+'px';void el.offsetWidth;el.style.transition='';}
+  const xd1=$('xd1'), xd2=$('xd2'), stepLab=$('stepLab');
+  let exRun=null;
+  function exHot(on){ex.classList.toggle('hot',on&&!REDUCED);pol.classList.toggle('testing',on);}
+  function landFX(k){
+    if(REDUCED||catchup)return;
+    stackc.classList.remove('flash');void stackc.offsetWidth;stackc.classList.add('flash');
+    for(let i=0;i<9;i++){
+      const s=document.createElement('i');s.className='spark';
+      s.style.left='153px';s.style.top=(SLOT[k]+20)+'px';cyclebox.appendChild(s);
+      const a2=Math.random()*Math.PI*2,d=55+Math.random()*45;
+      s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},
+        {transform:`translate(calc(-50% + ${Math.cos(a2)*d}px), calc(-50% + ${Math.sin(a2)*d*.7}px)) scale(.35)`,opacity:0}],
+        {duration:520+Math.random()*220,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>s.remove();
+    }
+  }
+  function land(k){
+    trav.classList.remove('show');
+    stack[k].classList.add('on');landFX(k);
+    badge.style.top=(SLOT[k]-42)+'px';
+    // the base env never changes, the WHOLE composite becomes env', env'' ...
+    const top=SLOT[k], bot=396;
+    brk.style.top=top+'px';brk.style.height=(bot-top)+'px';brk.classList.add('on');
+    brkLab.textContent=PRIMES[k];
+    brkLab.style.top=(((top+bot)/2)-9)+'px';
+    brkLab.classList.add('on');
+    brkLab.classList.remove('pulse2');void brkLab.offsetWidth;brkLab.classList.add('pulse2');
+    bigexpr.textContent=EXPRS[k];
+    popBadge();pane(4);caMid.classList.remove('hot');
+  }
+  function cycle(t0,k,fail){
+    const HOV=[88,SLOT[k]-13], SEAT=[88,SLOT[k]+2];
+    const LEG=380, ROUNDS=3;
+    const E=[
+      // 1) the policy runs: action/observation alternate for a few steps
+      {t:t0,      f:()=>{pane(0);litD(-1);exHot(true);exRun={from:t0+150,leg:LEG,legs:ROUNDS*2};}},
+      // 2) only after the rounds does a trajectory come out of the loop
+      {t:t0+150+LEG*ROUNDS*2+120, f:()=>{exHot(false);tauSpawn(tauA,214,124);}},
+      {t:t0+150+LEG*ROUNDS*2+550, f:()=>{tauTo(tauA,214,66,450);}},
+      {t:t0+150+LEG*ROUNDS*2+1100,f:()=>{caTop.classList.add('hot');tauTo(tauA,346,null,1000);}},
+      {t:t0+150+LEG*ROUNDS*2+2150,f:()=>{litD(0);}},
+      {t:t0+150+LEG*ROUNDS*2+2900,f:()=>{tauA.classList.remove('show');caTop.classList.remove('hot');
+                         pane(1);litD(1);}},
+    ];
+    const D0=t0+150+LEG*ROUNDS*2+2900;   // diagnose start
+    E.push({t:D0+2000, f:()=>{pane(2);litD(2);spawnAt(PC_W[0],PC_W[1]);}});
+    E.push({t:D0+3300, f:()=>{caMid.classList.add('hot');trav.classList.add('cand');
+                              mv(HOV[0],HOV[1],950);}});
+    const V0=D0+4300;                     // validate start: candidate provisionally stacked
+    E.push({t:V0, f:()=>{caMid.classList.remove('hot');pane(3);litD(3);dn[3].classList.add('scan');
+                         exHot(true);exRun={from:V0+150,leg:LEG,legs:ROUNDS*2};
+                         verdictline.innerHTML=fail
+                           ?'verdict: <b class="badc">the agent finds a bypass \u2192 REJECT \u00b7 revise</b>'
+                           :'verdict: <b class="okc">teaches verification \u2192 ACCEPT</b>';}});
+    E.push({t:V0+150+LEG*ROUNDS*2+120, f:()=>{exHot(false);tauSpawn(tauB,214,288);}});
+    E.push({t:V0+150+LEG*ROUNDS*2+550, f:()=>{tauTo(tauB,214,330,450);}});
+    E.push({t:V0+150+LEG*ROUNDS*2+1100,f:()=>{caBot.classList.add('hot');tauTo(tauB,346,null,1000);}});
+    E.push({t:V0+150+LEG*ROUNDS*2+2200,f:()=>{tauB.classList.remove('show');caBot.classList.remove('hot');}});
+    let t=V0+150+LEG*ROUNDS*2+2800;
+    if(fail){
+      E.push({t:t,      f:()=>{dn[3].classList.remove('scan');dn[3].classList.add('bad2');
+                               vres.textContent='\u2717';vres.classList.add('bad');}});
+      E.push({t:t+800,  f:()=>{dn[3].classList.remove('bad2');vres.classList.remove('bad');
+                               revP.classList.add('hot');revL.classList.add('hot');
+                               trav.classList.remove('cand');mv(88,205,350);}});
+      E.push({t:t+1250, f:()=>{mv(PC_W[0],PC_W[1],900);pane(2);litD(2);}});
+      E.push({t:t+3100, f:()=>{revP.classList.remove('hot');revL.classList.remove('hot');
+                               caMid.classList.add('hot');trav.classList.add('cand');
+                               mv(HOV[0],HOV[1],950);}});
+      const V1=t+4100;
+      E.push({t:V1, f:()=>{caMid.classList.remove('hot');pane(3);litD(3);dn[3].classList.add('scan');
+                           exHot(true);exRun={from:V1+150,leg:LEG,legs:4};
+                           verdictline.innerHTML='verdict: <b class="okc">holds up this time \u2192 ACCEPT</b>';}});
+      E.push({t:V1+150+LEG*4+120, f:()=>{exHot(false);tauSpawn(tauB,214,288);}});
+      E.push({t:V1+150+LEG*4+550, f:()=>{tauTo(tauB,214,330,450);}});
+      E.push({t:V1+150+LEG*4+1100,f:()=>{caBot.classList.add('hot');tauTo(tauB,346,null,1000);}});
+      E.push({t:V1+150+LEG*4+2200,f:()=>{tauB.classList.remove('show');caBot.classList.remove('hot');}});
+      t=V1+150+LEG*4+2800;
+    }
+    E.push({t:t,      f:()=>{dn[3].classList.remove('scan');dn[3].classList.add('ok2');
+                             vres.textContent='\u2713';vres.classList.add('ok');}});
+    E.push({t:t+750,  f:()=>{dn[3].classList.remove('ok2');vres.classList.remove('ok');litD(-1);
+                             mv(SEAT[0],SEAT[1],260);}});
+    E.push({t:t+1050, f:()=>{trav.classList.remove('cand');land(k);}});
+    E.push({t:t+2900, f:()=>{badge.classList.remove('pop');}});
+    return {ev:E, end:t+3100, ph:[t0, D0, D0+2000, V0]};
+  }
+  const EVL=[{t:100,f:()=>{cE.classList.add('on');}}];
+  const PH0=[];
+  let cur=500;
+  [[0,false],[1,true],[2,false]].forEach(([k,f],ci)=>{
+    const c=cycle(cur,k,f);
+    if(ci===0)PH0.push(...c.ph);
+    EVL.push(...c.ev);cur=c.end;});
+  EVL.push({t:cur+1500,f:()=>{stage.classList.add('dim');}});
+  const SL=cur+2700;
+  EVL.sort((x,y)=>x.t-y.t);
+  function resetLoop(){
+    stage.classList.remove('dim');
+    dn.forEach(n=>n.classList.remove('on','scan','ok2','bad2'));
+    stack.forEach(s=>s.classList.remove('on'));
+    tauA.classList.remove('show');tauB.classList.remove('show');
+    trav.classList.remove('show','cand');vres.classList.remove('ok','bad');
+    [caTop,caBot,caMid].forEach(c=>c.classList.remove('hot'));
+    revP.classList.remove('hot');revL.classList.remove('hot');
+    exHot(false);stackc.classList.remove('flash');badge.classList.remove('pop');
+    brk.classList.remove('on');brkLab.classList.remove('on','pulse2');
+    exRun=null;stepLab.classList.remove('on');xd1.style.opacity=0;xd2.style.opacity=0;
+    tauReset(tauA,214,66);tauReset(tauB,214,330);pane(0);
+  }
+  function applyAll(){
+    cE.classList.add('on');stack.forEach(s=>s.classList.add('on'));
+    badge.style.top=(SLOT[2]-42)+'px';
+    brk.style.top=SLOT[2]+'px';brk.style.height=(396-SLOT[2])+'px';brk.classList.add('on');
+    brkLab.textContent=PRIMES[2];brkLab.style.top=(((SLOT[2]+396)/2)-9)+'px';brkLab.classList.add('on');
+    bigexpr.textContent=EXPRS[2];badge.classList.add('pop');pane(2);
+    dn.forEach(n=>n.classList.add('on'));
+    document.getElementById('ctrlbar').style.display='none';
+  }
+  if(REDUCED){applyAll();return;}
+  let vt=0, speed=1, playing=true, lastNow=performance.now(), lastLoop=-1, evi=0;
+  function seek(target){
+    catchup=true;resetLoop();evi=0;vt=target;
+    while(evi<EVL.length&&target>=EVL[evi].t){EVL[evi].f();evi++;}
+    catchup=false;
+  }
+  $('playBtn').onclick=()=>{playing=!playing;$('playBtn').textContent=playing?'\u23f8':'\u25b6';};
+  $('rstBtn').onclick=()=>{seek(0);};
+  tabs.forEach((tb,i)=>tb.onclick=()=>{seek(PH0[i]);});
+
+  (function tick(now){
+    requestAnimationFrame(tick);
+    const dt=Math.min(60,now-lastNow); lastNow=now;
+    if(playing) vt+=dt*speed;
+    const t=vt%SL, loop=Math.floor(vt/SL);
+    if(loop!==lastLoop){lastLoop=loop;evi=0;resetLoop();}
+    while(evi<EVL.length&&t>=EVL[evi].t){EVL[evi].f();evi++;}
+    if(exRun){
+      const lt=t-exRun.from, kk=Math.floor(lt/exRun.leg);
+      if(lt>=0&&kk<exRun.legs){
+        const ph=(lt%exRun.leg)/exRun.leg, act=(kk%2===0);
+        xd1.style.opacity=act?1:0; xd2.style.opacity=act?0:1;
+        (act?xd1:xd2).style.offsetDistance=(ph*100).toFixed(1)+'%';
+        stepLab.textContent='step '+(Math.floor(kk/2)+1);
+        stepLab.classList.add('on');
+      } else {
+        xd1.style.opacity=0;xd2.style.opacity=0;stepLab.classList.remove('on');
+        if(kk>=exRun.legs)exRun=null;
+      }
+    }
+  })(performance.now());
+})();
+
+const ro=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target);}
+}),{threshold:.14});
+document.querySelectorAll('.rv').forEach(el=>ro.observe(el));
+
+
+
+/* ---------- MAGNETIC CTA ---------- */
+if(!REDUCED) document.querySelectorAll('.btn-hero').forEach(b=>{
+  b.addEventListener('mousemove',e=>{const r=b.getBoundingClientRect();
+    b.style.transform=`translate(${((e.clientX-r.left)/r.width-.5)*7}px,${((e.clientY-r.top)/r.height-.5)*6}px)`;});
+  b.addEventListener('mouseleave',()=>{b.style.transform='';});
+});
+
+
+
+
+
+/* ---------- RESULTS BARS ---------- */
+const barTimers=new WeakMap(), barSeen=new WeakSet(), barLive=new WeakSet();
+function barsZero(panel){
+  (barTimers.get(panel)||[]).forEach(clearTimeout);
+  panel.classList.add('noanim');
+  panel.querySelectorAll('.vcol').forEach(c=>{
+    const f=c.querySelector('.vfill'), v=c.querySelector('.vval'), d=c.querySelector('.vdelta');
+    f.style.height='0%'; v.style.bottom='8px'; v.classList.remove('in');
+    if(d){d.style.bottom='8px'; d.classList.remove('in');}
+  });
+}
+function barsPlay(panel){
+  const fast=barSeen.has(panel);
+  barsZero(panel); void panel.offsetWidth;          // flush the zero state
+  panel.classList.remove('noanim'); panel.classList.toggle('fast',fast);
+  const step=fast?95:150, ids=[];
+  panel.querySelectorAll('.vcol').forEach((c,i)=>{
+    const h=+c.dataset.h, f=c.querySelector('.vfill'),
+          v=c.querySelector('.vval'), d=c.querySelector('.vdelta');
+    ids.push(setTimeout(()=>{
+      f.style.height=h+'%';
+      v.style.bottom=`calc(${h}% + 9px)`;v.classList.add('in');
+      if(d){d.style.bottom=`calc(${h}% + 34px)`;d.classList.add('in');}
+    }, 30+i*step));
+  });
+  barTimers.set(panel,ids); barSeen.add(panel);
+}
+const rio=new IntersectionObserver(es=>es.forEach(e=>{
+  const p=e.target;
+  if(REDUCED){ if(e.isIntersecting) barsPlay(p); return; }
+  if(e.intersectionRatio>=.2){ if(!barLive.has(p)){barLive.add(p); barsPlay(p);} }
+  else if(e.intersectionRatio<=0){ barLive.delete(p); barsZero(p); }
+}),{threshold:[0,.2]});
+document.querySelectorAll('.vpanel').forEach(p=>rio.observe(p));
+/* ---------- ENVIRONMENT SCALING CHART (redrawn on resize) ---------- */
+(()=>{
+  const svg=document.getElementById('lchart'); if(!svg) return;
+  const XS=[0,50,100,150,200,250,300];
+  const SER=[
+    {k:'sm',name:'SWE-smith',note:'SOTA env scaling',v:[47.67,48.16,50.12,50.12,49.88,49.88,50.37]},
+    {k:'lt',name:'SWE-Lite', note:'real envs',       v:[47.67,48.40,49.88,49.63,50.37,50.86,52.09]},
+    {k:'eh',name:'EnvHarness',note:'ours',           v:[47.67,49.14,52.58,53.32,53.81,54.05,54.79]},
+  ];
+  const Y0=47, Y1=55.5, TICKS=[48,50,52,54];
+  const NS='http://www.w3.org/2000/svg';
+  const el=(n,a)=>{const e=document.createElementNS(NS,n);
+    for(const k in a)e.setAttribute(k,a[k]);return e;};
+  let drawn=false;
+
+  function render(){
+    const W=Math.max(280,Math.round(svg.getBoundingClientRect().width||svg.parentElement.clientWidth));
+    const narrow=W<430;
+    const H=Math.round(Math.min(340,Math.max(215,W*(narrow?0.78:0.62))));
+    const L=38, R=narrow?86:150, T=narrow?30:22, B=42;
+    const px=x=>L+(x-XS[0])/(XS[6]-XS[0])*(W-L-R);
+    const py=v=>T+(Y1-v)/(Y1-Y0)*(H-T-B);
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    svg.setAttribute('height',H);
+    svg.textContent='';
+
+    TICKS.forEach(t=>{
+      svg.appendChild(el('line',{class:'gl',x1:L,x2:W-R,y1:py(t),y2:py(t)}));
+      const y=el('text',{class:'ax',x:L-8,y:py(t)+4,'text-anchor':'end'});y.textContent=t;svg.appendChild(y);
+    });
+    svg.appendChild(el('line',{class:'ax-l',x1:L,x2:L,y1:T-4,y2:H-B}));
+    svg.appendChild(el('line',{class:'ax-l',x1:L,x2:W-R,y1:H-B,y2:H-B}));
+    XS.filter(x=>x%100===0).forEach(x=>{
+      const t=el('text',{class:'ax',x:px(x),y:H-B+18,'text-anchor':'middle'});t.textContent=x;svg.appendChild(t);});
+    const xt=el('text',{class:'axt',x:(L+W-R)/2,y:H-6,'text-anchor':'middle'});
+    xt.textContent='Number of Environments'; svg.appendChild(xt);
+    const yt=el('text',{class:'axt',x:-(T+H-B)/2,y:12,transform:'rotate(-90)','text-anchor':'middle'});
+    yt.textContent='Resolved Rate on SWE-Verified (%)'; svg.appendChild(yt);
+
+    SER.forEach(s=>{
+      const g=el('g',{class:'ser '+s.k});
+      const pts=XS.map((x,i)=>[px(x),py(s.v[i])]);
+      const d='M '+pts.map(p=>`${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L ');
+      let len=0; for(let i=1;i<pts.length;i++)
+        len+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+      const path=el('path',{class:'ln',d}); path.style.setProperty('--len',Math.ceil(len));
+      g.appendChild(path);
+      pts.forEach(p=>g.appendChild(el('circle',{class:'dot',cx:p[0],cy:p[1],r:s.k==='eh'?3.2:2.4})));
+      const lx=pts[6][0]+9, ly=pts[6][1];
+      const nm=el('text',{class:'endlab',x:lx,y:ly+(narrow?-9:-2)}); nm.textContent=s.name;
+      const nt=el('text',{class:'endnote',x:lx,y:ly+(narrow?2:11)});
+      nt.textContent=narrow&&s.note==='SOTA env scaling'?'SOTA scaling':s.note;
+      const vl=el('text',{class:'endval',x:lx,y:ly+(narrow?13:25)}); vl.textContent=s.v[6].toFixed(2);
+      g.appendChild(nm); g.appendChild(nt); g.appendChild(vl);
+      svg.appendChild(g);
+    });
+    if(drawn) svg.classList.add('in');
+  }
+
+  render();
+  if(REDUCED){drawn=true;svg.classList.add('in');}
+  else{
+    svg.classList.add('anim');
+    let seen=false, live=false, anims=[];
+    function play(){
+      anims.forEach(x=>x.cancel()); anims=[];
+      const fast=seen, dur=fast?2200:4000, off=fast?220:450;
+      svg.classList.add('in');                      // labels/dots handled by CSS opacity
+      [...svg.querySelectorAll('.ser')].forEach((g,i)=>{
+        const path=g.querySelector('.ln'), len=path.style.getPropertyValue('--len');
+        anims.push(path.animate(
+          [{strokeDasharray:len, strokeDashoffset:len},{strokeDasharray:len, strokeDashoffset:0}],
+          {duration:dur, delay:i*off, easing:'cubic-bezier(.38,.66,.3,1)', fill:'both'}));
+        const late = i*off + dur*0.62;
+        [...g.querySelectorAll('.dot')].forEach(d=>anims.push(d.animate(
+          [{opacity:0},{opacity:1}],{duration:400, delay:late, easing:'ease', fill:'both'})));
+        [g.querySelector('.endlab'),g.querySelector('.endnote'),g.querySelector('.endval')]
+          .forEach((t,k)=>{ if(t) anims.push(t.animate([{opacity:0},{opacity:1}],
+            {duration:500, delay:i*off+dur*0.92+k*110, easing:'ease', fill:'both'})); });
+      });
+      seen=true; drawn=true;
+    }
+    function stop(){
+      anims.forEach(x=>x.cancel()); anims=[];
+      svg.classList.remove('in');
+    }
+    window.__ehPlayLine=play;                        // used after a resize redraw
+    if(REDUCED){svg.classList.add('in');drawn=true;}
+    else{
+      const lio=new IntersectionObserver(es=>es.forEach(e=>{
+        if(e.intersectionRatio>=.2){ if(!live){live=true; requestAnimationFrame(play);} }
+        else if(e.intersectionRatio<=0){ live=false; stop(); }
+      }),{threshold:[0,.2]});
+      lio.observe(svg);
+    }
+  }
+  let rt; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{
+    render();
+    if(drawn){ svg.classList.add('in');
+      svg.querySelectorAll('.ln').forEach(p=>{p.style.strokeDasharray='none';p.style.strokeDashoffset='0';});
+      svg.querySelectorAll('.dot,.endlab,.endnote,.endval').forEach(e=>e.style.opacity='1'); }
+  },140);});
+})();
+
+
+
+/* ---------- BIBTEX ---------- */
+document.getElementById('copyBib').onclick=()=>{
+  navigator.clipboard.writeText(document.getElementById('bibText').textContent).catch(()=>{});
+  const b=document.getElementById('copyBib');b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1400);
+};
+
+/* ================= PLAYGROUND ================= */
+const editors={}, DOCS={
+  setup:`<b>Stage \u00b7 \u03b4: customizes where the episode starts.</b> Replays each <code>Action</code> through <code>inner.step()</code> on reset. Only s\u2080 changes; tasks and verifiers stay frozen.`, ruleA:`<b>Contract \u00b7 \u0192_A: customizes what the policy may do.</b> Return the action, a rewritten one, or <code>Blocked(reason)</code>, and the reason string is the teaching signal.`, ruleT:`<b>Contract \u00b7 \u0192_T: customizes what happens as a result.</b> Runs after <code>inner.step()</code>: fake a consequence the env would never produce. True state untouched.`,
+  ruleO:`<b>Contract \u00b7 \u0192_O: customizes what the policy sees.</b> Rewrites the <code>Observation</code> on the way out, so the env knows everything and the policy no longer does.`, link:`<b>Chain \u00b7 g: customizes the task itself.</b> Chains two envs into one long-horizon episode: one step budget, and <code>evaluate()</code> requires both to pass.`
+};
+const LABELS={setup:'Stage',ruleA:'Contract · A',ruleT:'Contract · T',ruleO:'Contract · O',link:'Chain'};
+['setup','ruleA','ruleT','ruleO','link'].forEach(k=>{editors[k]=document.getElementById('tpl-'+k).textContent.trim()+"\n";});
+let curTab='setup';
+document.getElementById('editor').value=editors.setup;
+document.getElementById('doc').innerHTML=DOCS.setup;
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    editors[curTab]=document.getElementById('editor').value;
+    curTab=t.dataset.k;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
+    document.getElementById('editor').value=editors[curTab];
+    document.getElementById('doc').innerHTML=DOCS[curTab];
+  };
+});
+function setStatus(m,c){const s=document.getElementById('status');s.textContent=m;s.className='status'+(c?' '+c:'');}
+
+let py=null,S=null,sel=[],pendOp=null;
+function fmtPending(){
+  const i=sel.length>0?sel[0]:'?',j=sel.length>1?sel[1]:'?',o=pendOp||'?';
+  document.getElementById('pendTxt').textContent=`combine(i=${i}, j=${j}, op=${o==='?'?'?':'"'+o+'"'})`;
+}
+function cardEl(txt,clickable,ord,masked){
+  const d=document.createElement('div');
+  d.className='card24'+(clickable?' click':'')+(masked?' masked':'')+(ord!=null?' sel':'');
+  if(ord!=null)d.dataset.ord=ord;
+  d.textContent=txt;return d;
+}
+function render(){
+  if(!S)return;
+  const oc=document.getElementById('obsCards');oc.innerHTML='';
+  S.obs_shown.forEach((txt,idx)=>{
+    const ord=sel.indexOf(idx);
+    const el=cardEl(txt,true,ord>=0?ord+1:null,txt==='?');
+    el.onclick=()=>{const k=sel.indexOf(idx);if(k>=0)sel.splice(k,1);else if(sel.length<2)sel.push(idx);
+      fmtPending();render();maybeFire();};
+    oc.appendChild(el);
+  });
+  document.getElementById('obsHist').innerHTML='&nbsp;';
+  const sc=document.getElementById('stCards');sc.innerHTML='';
+  S.true_cards.forEach(t=>sc.appendChild(cardEl(t,false,null,false)));
+  document.getElementById('stHist').innerHTML=S.true_history.length?S.true_history.map(h=>'› '+h).join('<br>'):'&nbsp;';
+  const diverged=JSON.stringify(S.obs_shown)!==JSON.stringify(S.true_cards);
+  document.getElementById('stateView').classList.toggle('diverged',diverged);
+  const wb=document.getElementById('warnbar');
+  wb.classList.toggle('on',!!S.warn); wb.textContent=S.warn||'';
+  const v=document.getElementById('verdict');
+  v.className='verdict'+(S.won?' ok':(S.blocked?' blocked':''));
+  v.textContent=S.won?'evaluate().success = True  ✓  solved'
+    :S.blocked?('[blocked] '+S.blocked_reason)
+    :diverged?'A value is hidden from observe(). get_env_state() still has it.'
+    :'Pick two cards, then an operator.';
+  document.getElementById('envTag').textContent=S.stack.length?S.stack.join(' + '):'bare env';
+  document.getElementById('stageBadge').innerHTML=S.stage?'<span style="color:var(--teal)">stage '+S.stage+'</span> &nbsp;·&nbsp; ':'';
+  const tl=document.getElementById('trajList');
+  if(!S.log.length)tl.innerHTML='<span class="traj-empty">no actions yet</span>';
+  else{tl.innerHTML='';
+    S.log.forEach((e,i)=>{const r=document.createElement('div');
+      r.className='trow'+(e.blocked?' blocked':'')+((e.reward>0||e.switch)?' win':'');
+      r.innerHTML='<span class="i">'+(i+1)+'</span><span class="act">'+e.action+'</span>'+
+        (e.blocked?'<span class="why">⊘ '+e.note+'</span>'
+         :e.switch?'<span class="why">→ '+e.note+'</span>'
+         :(e.reward>0?'<span class="why">reward = 1</span>':''));
+      tl.appendChild(r);});
+    tl.scrollTop=tl.scrollHeight;}
+  const nb=S.log.filter(e=>e.blocked).length;
+  document.getElementById('trajCnt').textContent=S.log.length+' steps'+(nb?'  ·  '+nb+' blocked':'');
+  const sv=document.getElementById('stackView');
+  if(!S.stack.length)sv.innerHTML='<span class="empty-stack">no components applied, bare environment</span>';
+  else{sv.innerHTML='';S.stack.forEach((k,i)=>{const c=document.createElement('span');c.className='stack-chip';
+    c.innerHTML=k+' <span class="x" data-i="'+i+'">✕</span>';sv.appendChild(c);});}
+  let expr='Toy24Env(...)';
+  S.stack.forEach(k=>{expr=k==='Chain'?'Chain('+expr+', Toy24Env(...))':k==='Stage'?'Stage('+expr+')':'Contract('+expr+')';});
+  document.getElementById('stackExpr').innerHTML='env = <b>'+expr+'</b>';
+  if(S.blocked){
+    const opName=(S.last_op.match(/op="(\w+)"/)||[])[1];
+    const btn=document.querySelector('.op[data-op="'+opName+'"]');
+    if(btn){btn.classList.remove('rejected');void btn.offsetWidth;btn.classList.add('rejected');
+      setTimeout(()=>btn.classList.remove('rejected'),430);}
+  }
+}
+function maybeFire(){
+  if(sel.length===2&&pendOp){
+    const [i,j]=sel,op=pendOp;sel=[];pendOp=null;fmtPending();
+    S=JSON.parse(py.globals.get('do_step')(i,j,op));render();
+  }
+}
+document.querySelectorAll('.op').forEach(b=>{b.onclick=()=>{if(!py)return;pendOp=b.dataset.op;fmtPending();maybeFire();};});
+document.getElementById('clearSel').onclick=()=>{sel=[];pendOp=null;fmtPending();render();};
+document.getElementById('newBtn').onclick=()=>{
+  if(!py)return;sel=[];pendOp=null;fmtPending();
+  py.globals.get('set_hand')(Math.floor(Math.random()*7));
+  S=JSON.parse(py.globals.get('ui_state')());render();
+};
+document.getElementById('applyBtn').onclick=()=>{
+  const code=document.getElementById('editor').value;editors[curTab]=code;
+  try{
+    py.globals.get('apply_code')(code,LABELS[curTab]);
+    S=JSON.parse(py.globals.get('ui_state')());
+    sel=[];pendOp=null;fmtPending();render();
+    setStatus(LABELS[curTab]+' applied, '+S.stack.length+' on the stack','ok');
+  }catch(err){const m=String(err.message||err).trim().split('\n');setStatus(m[m.length-1].slice(0,180),'err');}
+};
+document.getElementById('resetStackBtn').onclick=()=>{
+  if(!py)return;
+  py.globals.get('clear_stack')();S=JSON.parse(py.globals.get('ui_state')());
+  sel=[];pendOp=null;fmtPending();render();setStatus('stack cleared','');
+};
+document.getElementById('stackView').addEventListener('click',e=>{
+  if(e.target.classList.contains('x')){
+    py.globals.get('drop')(parseInt(e.target.dataset.i,10));
+    S=JSON.parse(py.globals.get('ui_state')());render();setStatus('component removed','');}
+});
+function failBoot(title,body){
+  const boot=document.getElementById('boot');
+  boot.classList.remove('done');boot.classList.add('fail');
+  boot.innerHTML='<span class="why">'+title+'</span>'+body;
+  setStatus('Python runtime unavailable','err');
+}
+(async ()=>{
+  const boot=document.getElementById('boot'),msg=document.getElementById('bootMsg');
+  if(location.protocol==='file:'){
+    const name=(location.pathname.split('/').pop())||'index.html';
+    failBoot('This page needs to be served over http, not opened as a file.',
+      '<div>WebAssembly cannot load from a <code>file://</code> address. Serve the folder and open it through localhost:</div>'+
+      '<pre>cd '+decodeURIComponent(location.pathname.replace(/\/[^/]*$/,''))+'\npython3 -m http.server 8000</pre>'+
+      '<div>then open <b>http://localhost:8000/'+name+'</b></div>'+
+      '<div class="hint">On GitHub Pages or any https host it works with no extra steps.</div>');
+    return;
+  }
+  try{
+    const t0=performance.now();
+    const {loadPyodide}=await import(PYODIDE_URL+"pyodide.mjs");
+    msg.textContent='loading the Python runtime…';
+    py=await loadPyodide({indexURL:PYODIDE_URL});
+    msg.textContent='importing envharness…';
+    py.runPython(document.getElementById('ehcore').textContent);
+    S=JSON.parse(py.globals.get('ui_state')());
+    fmtPending();render();
+    document.getElementById('applyBtn').disabled=false;
+    boot.classList.add('done');
+    msg.textContent='CPython '+py.runPython("import sys; sys.version.split()[0]")
+      +' ready in '+((performance.now()-t0)/1000).toFixed(1)+'s, components run for real';
+    setStatus('ready, edit a component and apply it','');
+  }catch(e){
+    failBoot('The Python runtime could not start.',
+      '<div>'+String(e.message||e).slice(0,200)+'</div>'+
+      '<div class="hint">Most often a blocked network request. The runtime is fetched from cdn.jsdelivr.net; '+
+      'allow it, or vendor the Pyodide files next to this page and point PYODIDE_URL at them.</div>');
+  }
+})();
+</script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a41b4500fb5741bea77a9342a5fbc939"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
